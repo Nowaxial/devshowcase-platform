@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="src/DevShowCase.API/DevShowCase.API.csproj" Id="12e029da-9c95-4b56-b68f-0bc9811a1dbc" />
+  <Project Path="src/DevShowCase.Client/DevShowCase.Client.csproj" Id="30b98bf2-f4ae-4d75-9d1e-8d3e9a5a0ffd" />
+  <Project Path="src/DevShowCase.Shared/DevShowCase.Shared.csproj" Id="3bdf51c6-0e1a-4fdb-894b-7632c9f69729" />
+</Solution>
