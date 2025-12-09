@@ -29,7 +29,7 @@ public class AuthController(
             FirstName = registerDto.FirstName,
             LastName = registerDto.LastName,
             ProfileImageUrl = "https://placehold.co/150", // Placeholder tills vidare
-            SelectedThemeId = null // Inget tema valt
+            SelectedThemeId = 1 // Standardtema
         };
         // 3. Spara till databas (lösenordet hashas automatiskt här!)
         var result = await userManager.CreateAsync(user, registerDto.Password);

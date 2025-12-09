@@ -69,6 +69,8 @@ builder.Services.AddAuthentication(options =>
 });
 var app = builder.Build();
 
+DbInitializer.Seed(app);
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

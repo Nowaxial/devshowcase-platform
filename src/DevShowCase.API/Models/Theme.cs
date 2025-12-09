@@ -8,6 +8,10 @@ public class Theme
     public string CssFileName { get; set; } = string.Empty; // e.g., "selfso-minimal.css"
     public bool IsActive { get; set; } = true;
 
+    public string? PreviewImageUrl { get; set; }
+    public bool SupportsDarkMode { get; set; } = true;
+    public string TargetAudience { get; set; } = "General"; // Frontend, Backend, etc.
+
     // Navigation
     public virtual ICollection<User> Users { get; set; } = new List<User>();
 }
