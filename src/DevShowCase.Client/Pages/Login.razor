@@ -1,0 +1,46 @@
+﻿@page "/login"
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@using DevShowcase.Shared.DTOs.Auth
+
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-16">
+    <MudPaper Elevation="3" Class="pa-8">
+        <MudText Typo="Typo.h4" GutterBottom="true" Align="Align.Center">Welcome Back</MudText>
+
+        <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+            <DataAnnotationsValidator />
+
+            <MudTextField Label="Email" @bind-Value="loginModel.Email"
+                          For="@(() => loginModel.Email)" Variant="Variant.Outlined" Class="mb-4" />
+
+            <MudTextField Label="Password" @bind-Value="loginModel.Password"
+                          For="@(() => loginModel.Password)" Variant="Variant.Outlined"
+                          InputType="InputType.Password" Class="mb-6" />
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled"
+                       Color="Color.Primary" FullWidth="true" Size="Size.Large">
+                Login
+            </MudButton>
+        </EditForm>
+
+        <MudText Align="Align.Center" Class="mt-4">
+            Don't have an account? <MudLink Href="register">Register</MudLink>
+        </MudText>
+    </MudPaper>
+</MudContainer>
+@code {
+    private LoginDto loginModel = new();
+    private async Task HandleLogin()
+    {
+        var result = await AuthService.Login(loginModel);
+        if (result.Success)
+        {
+            Navigation.NavigateTo("dashboard"); // Eller vart vi nu vill gå
+        }
+        else
+        {
+            // Här borde vi visa felmeddelande, t.ex. med Snackbar
+            Console.WriteLine("Login failed");
+        }
+    }
+}

@@ -84,6 +84,10 @@ if (app.Environment.IsDevelopment())
 }
 app.UseHttpsRedirection();
 // VIKTIGT: Ordningen är viktig här!
+app.UseCors(builder => builder
+    .AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader());
 app.UseAuthentication(); // 1. Vem är du?
 app.UseAuthorization();  // 2. Får du vara här?
 app.MapControllers();

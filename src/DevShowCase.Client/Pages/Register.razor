@@ -1,0 +1,39 @@
+﻿@page "/register"
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@using DevShowcase.Shared.DTOs.Auth
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-16">
+    <MudPaper Elevation="3" Class="pa-8">
+        <MudText Typo="Typo.h4" GutterBottom="true" Align="Align.Center">Join DevShowcase</MudText>
+        <EditForm Model="@registerModel" OnValidSubmit="HandleRegister">
+            <DataAnnotationsValidator />
+            <MudTextField Label="Email" @bind-Value="registerModel.Email"
+                          For="@(() => registerModel.Email)" Variant="Variant.Outlined" Class="mb-4" />
+            <MudTextField Label="Password" @bind-Value="registerModel.Password"
+                          For="@(() => registerModel.Password)" Variant="Variant.Outlined"
+                          InputType="InputType.Password" Class="mb-4" />
+            <MudTextField Label="Confirm Password" @bind-Value="registerModel.ConfirmPassword"
+                          For="@(() => registerModel.ConfirmPassword)" Variant="Variant.Outlined"
+                          InputType="InputType.Password" Class="mb-6" />
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled"
+                       Color="Color.Primary" FullWidth="true" Size="Size.Large">
+                Register
+            </MudButton>
+        </EditForm>
+        <MudText Align="Align.Center" Class="mt-4">
+            Already have an account? <MudLink Href="login">Login</MudLink>
+        </MudText>
+    </MudPaper>
+</MudContainer>
+@code {
+    private RegisterDto registerModel = new();
+    private async Task HandleRegister()
+    {
+        var result = await AuthService.Register(registerModel);
+        if (result.Success)
+        {
+            Navigation.NavigateTo("login");
+        }
+    }
+}
