@@ -1,39 +1,22 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">DevShowCase.Client</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
-</div>
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+@using DevShowcase.Client.Shared
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-    </nav>
-</div>
+<MudNavMenu>
+    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@LucideIcons.Home" iconclass="lucide-icon">Home</MudNavLink>
 
-@code {
-    private bool collapseNavMenu = true;
-
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
-}
+    <AuthorizeView>
+        <Authorized>
+            <MudText Typo="Typo.subtitle2" Class="px-4 py-2 mt-2" Color="Color.Default">Admin</MudText>
+            <MudNavLink Href="admin/dashboard" Icon="@LucideIcons.Dashboard" iconclass="lucide-icon">Dashboard</MudNavLink>
+            <MudNavLink Href="admin/profile" Icon="@LucideIcons.User" iconclass="lucide-icon">Profile</MudNavLink>
+            <MudNavLink Href="admin/experience" Icon="@LucideIcons.Briefcase" iconclass="lucide-icon">Experience</MudNavLink>
+            <MudNavLink Href="admin/projects" Icon="@LucideIcons.Code" iconclass="lucide-icon">Projects</MudNavLink>
+            <MudNavLink Href="logout" Icon="@LucideIcons.LogOut" iconclass="lucide-icon" Class="mt-4">Logout</MudNavLink>
+        </Authorized>
+        <NotAuthorized>
+            <MudNavLink Href="login" Icon="@LucideIcons.LogIn" iconclass="lucide-icon">Login</MudNavLink>
+            <MudNavLink Href="register" Icon="@LucideIcons.UserPlus" iconclass="lucide-icon">Register</MudNavLink>
+        </NotAuthorized>
+    </AuthorizeView>
+</MudNavMenu>

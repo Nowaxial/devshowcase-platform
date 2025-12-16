@@ -80,7 +80,7 @@ public class AuthService : AuthenticationStateProvider
         var keyValuePairs = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonBytes);
         return keyValuePairs!.Select(kvp => new Claim(kvp.Key, kvp.Value.ToString()!));
     }
-    private byte[] ParseBase64WithoutPadding(string base64)
+    private static byte[] ParseBase64WithoutPadding(string base64)
     {
         switch (base64.Length % 4)
         {

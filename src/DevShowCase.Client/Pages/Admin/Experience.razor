@@ -1,0 +1,122 @@
+@page "/admin/experience"
+@using Microsoft.AspNetCore.Authorization
+@using DevShowcase.Shared.DTOs.Portfolio
+@using DevShowcase.Client.Services
+@using DevShowcase.Client.Shared
+@attribute [Authorize]
+@inject ApiService ApiService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<PageTitle>Manage Experience</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <div class="d-flex justify-space-between align-center mb-4">
+        <MudText Typo="Typo.h4">Experience</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@LucideIcons.Briefcase" OnClick="OpenCreateDialog">Add New</MudButton>
+    </div>
+
+    @if (_loading)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    }
+    else
+    {
+        <MudTable Items="@_experiences" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info">
+            <HeaderContent>
+                <MudTh>Company</MudTh>
+                <MudTh>Position</MudTh>
+                <MudTh>Period</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Company">@context.Company</MudTd>
+                <MudTd DataLabel="Position">@context.Position</MudTd>
+                <MudTd DataLabel="Period">
+                    @context.StartDate.ToString("MMM yyyy") - 
+                    @(context.IsCurrent ? "Present" : context.EndDate?.ToString("MMM yyyy"))
+                </MudTd>
+                <MudTd DataLabel="Actions">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => OpenEditDialog(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteExperience(context))" />
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+    }
+</MudContainer>
+
+    @code {
+    private List<ExperienceDto> _experiences = new();
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        try
+        {
+            _experiences = await ApiService.GetExperiencesAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        var parameters = new DialogParameters { ["IsEdit"] = false };
+        var dialog = await DialogService.ShowAsync<ExperienceDialog>("Add Experience", parameters);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task OpenEditDialog(ExperienceDto experience)
+    {
+        var parameters = new DialogParameters { ["IsEdit"] = true, ["Experience"] = experience };
+        var dialog = await DialogService.ShowAsync<ExperienceDialog>("Edit Experience", parameters);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task DeleteExperience(ExperienceDto experience)
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            "Delete", 
+            $"Are you sure you want to delete {experience.Position} at {experience.Company}?", 
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (result == true)
+        {
+            try
+            {
+                await ApiService.DeleteExperienceAsync(experience.Id);
+                Snackbar.Add("Experience deleted", Severity.Success);
+                await LoadData();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+}

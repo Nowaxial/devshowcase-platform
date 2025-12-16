@@ -36,5 +36,13 @@ public class ApiService(HttpClient httpClient)
         await httpClient.PostAsJsonAsync("api/project", dto);
     }
 
-    // Du kan fylla på med fler metoder här sen för Update/Delete Project
+    public async Task UpdateProjectAsync(int id, CreateProjectDto dto)
+    {
+        await httpClient.PutAsJsonAsync($"api/project/{id}", dto);
+    }
+    
+    public async Task DeleteProjectAsync(int id)
+    {
+        await httpClient.DeleteAsync($"api/project/{id}");
+    }
 }

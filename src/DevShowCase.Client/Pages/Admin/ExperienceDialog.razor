@@ -1,0 +1,104 @@
+@using DevShowcase.Shared.DTOs.Portfolio
+@using System.ComponentModel.DataAnnotations
+@using DevShowcase.Client.Services
+@inject ApiService ApiService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@success">
+            <MudTextField T="string" Label="Company" @bind-Value="Model.Company" Required="true" RequiredError="Company is required!" />
+            <MudTextField T="string" Label="Position" @bind-Value="Model.Position" Required="true" RequiredError="Position is required!" />
+            <MudTextField T="string" Label="Location" @bind-Value="Model.Location" />
+            
+            <MudGrid>
+                <MudItem xs="6">
+                    <MudDatePicker Label="Start Date" @bind-Date="StartDate" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudDatePicker Label="End Date" @bind-Date="EndDate" Disabled="@Model.IsCurrent" />
+                </MudItem>
+            </MudGrid>
+            
+            <MudCheckBox T="bool" Label="Currently working here" @bind-checked="Model.IsCurrent" />
+            
+            <MudTextField T="string" Label="Description" @bind-Value="Model.Description" Lines="5" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">@((IsEdit) ? "Update" : "Create")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public bool IsEdit { get; set; }
+    [Parameter] public ExperienceDto? Experience { get; set; }
+
+    private CreateExperienceDto Model { get; set; } = new();
+    private MudForm form = default!;
+    private bool success;
+
+    // Helper properties for MudDatePicker (nullable DateTime?)
+    private DateTime? StartDate
+    {
+        get => Model.StartDate == default ? null : Model.StartDate;
+        set => Model.StartDate = value ?? DateTime.Now;
+    }
+
+    private DateTime? EndDate
+    {
+        get => Model.EndDate;
+        set => Model.EndDate = value;
+    }
+
+    protected override void OnInitialized()
+    {
+        if (IsEdit && Experience != null)
+        {
+            // Map existing data to edit model
+            Model = new CreateExperienceDto
+            {
+                Company = Experience.Company,
+                Position = Experience.Position,
+                Location = Experience.Location,
+                StartDate = Experience.StartDate,
+                EndDate = Experience.EndDate,
+                IsCurrent = Experience.IsCurrent,
+                Description = Experience.Description,
+                ContentLanguage = Experience.ContentLanguage
+            };
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Submit()
+    {
+        await form.Validate();
+
+        if (success)
+        {
+            try
+            {
+                if (IsEdit && Experience != null)
+                {
+                    await ApiService.UpdateExperienceAsync(Experience.Id, Model);
+                    Snackbar.Add("Experience updated", Severity.Success);
+                }
+                else
+                {
+                    await ApiService.CreateExperienceAsync(Model);
+                    Snackbar.Add("Experience created", Severity.Success);
+                }
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+}

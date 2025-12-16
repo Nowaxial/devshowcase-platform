@@ -1,0 +1,139 @@
+@using DevShowcase.Shared.DTOs.Portfolio
+@using DevShowcase.Client.Services
+@using MudBlazor
+@inject ApiService ApiService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@success">
+            <MudTextField T="string" Label="Title" @bind-Value="Model.Title" Required="true" RequiredError="Title is required!" />
+            
+            <MudGrid>
+                <MudItem xs="12" sm="6">
+                    <MudDatePicker Label="Start Date" @bind-Date="StartDate" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudDatePicker Label="End Date" @bind-Date="EndDate" />
+                </MudItem>
+            </MudGrid>
+
+            <MudTextField T="string" Label="Description" @bind-Value="Model.Description" Lines="3" />
+            
+            <MudTextField T="string" Label="Image URL" @bind-Value="Model.ImageUrl" HelperText="Direct link to image" />
+            
+            <MudGrid>
+                <MudItem xs="12" sm="6">
+                    <MudTextField T="string" Label="Project URL" @bind-Value="Model.ProjectUrl" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField T="string" Label="GitHub URL" @bind-Value="Model.GithubUrl" />
+                </MudItem>
+            </MudGrid>
+
+            <MudTextField T="string" Label="Technologies" @bind-Value="_technologiesInput" HelperText="Comma separated (e.g. C#, React, Azure)" />
+            
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">@((IsEdit) ? "Update" : "Create")</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public bool IsEdit { get; set; }
+    [Parameter] public ProjectDto? Project { get; set; }
+
+    private CreateProjectDto Model { get; set; } = new();
+    private MudForm form = default!;
+    private bool success;
+    private string _technologiesInput = string.Empty;
+
+    private DateTime? StartDate
+    {
+        get => Model.StartDate == default ? null : Model.StartDate;
+        set => Model.StartDate = value ?? DateTime.Now;
+    }
+
+    private DateTime? EndDate
+    {
+        get => Model.EndDate;
+        set => Model.EndDate = value;
+    }
+
+    protected override void OnInitialized()
+    {
+        if (IsEdit && Project != null)
+        {
+            Model = new CreateProjectDto
+            {
+                Title = Project.Title,
+                Description = Project.Description,
+                ImageUrl = Project.ImageUrl,
+                ProjectUrl = Project.ProjectUrl,
+                GithubUrl = Project.GithubUrl,
+                StartDate = Project.StartDate,
+                EndDate = Project.EndDate,
+                Technologies = Project.Technologies, // JSON array string
+                ContentLanguage = Project.ContentLanguage
+            };
+            
+            // Convert JSON array string back to comma separated for input
+            if (!string.IsNullOrEmpty(Model.Technologies))
+            {
+                try 
+                {
+                    var techs = System.Text.Json.JsonSerializer.Deserialize<string[]>(Model.Technologies);
+                    if (techs != null)
+                    {
+                        _technologiesInput = string.Join(", ", techs);
+                    }
+                }
+                catch {}
+            }
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Submit()
+    {
+        await form.Validate();
+
+        if (success)
+        {
+            try
+            {
+                // Convert comma separated string to JSON array
+                if (!string.IsNullOrWhiteSpace(_technologiesInput))
+                {
+                    var techs = _technologiesInput.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    Model.Technologies = System.Text.Json.JsonSerializer.Serialize(techs);
+                }
+                else
+                {
+                    Model.Technologies = "[]"; 
+                }
+
+                if (IsEdit && Project != null)
+                {
+                    await ApiService.UpdateProjectAsync(Project.Id, Model);
+                    Snackbar.Add("Project updated", Severity.Success);
+                }
+                else
+                {
+                    await ApiService.CreateProjectAsync(Model);
+                    Snackbar.Add("Project created", Severity.Success);
+                }
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+}

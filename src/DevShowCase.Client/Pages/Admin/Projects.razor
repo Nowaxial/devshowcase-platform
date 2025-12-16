@@ -1,0 +1,168 @@
+@page "/admin/projects"
+@using DevShowCase.Client.Shared
+@using Microsoft.AspNetCore.Authorization
+@using DevShowcase.Shared.DTOs.Portfolio
+@using DevShowcase.Client.Services
+@using DevShowcase.Client.Shared
+@attribute [Authorize]
+@inject ApiService ApiService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<PageTitle>Manage Projects</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <div class="d-flex justify-space-between align-center mb-4">
+        <MudText Typo="Typo.h4">Projects</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@LucideIcons.Code" OnClick="OpenCreateDialog">Add New</MudButton>
+    </div>
+
+    @if (_loading)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    }
+    else
+    {
+        <MudGrid>
+            @foreach (var project in _projects)
+            {
+                <MudItem xs="12" sm="6" md="4">
+                    <MudCard Elevation="3" Class="h-100">
+                        @if (!string.IsNullOrEmpty(project.ImageUrl))
+                        {
+                            <div @onclick="@(() => OpenImageDialog(project.ImageUrl))" style="cursor: pointer;">
+                                <MudCardMedia Image="@project.ImageUrl" Height="200" />
+                            </div>
+                        }
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">@project.Title</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-2">@project.StartDate?.ToString("yyyy-MM-dd")</MudText>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="@(() => OpenEditDialog(project))" />
+                            </CardHeaderActions>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudText Typo="Typo.body2" Class="mb-2">@project.Description</MudText>
+                            <MudChipSet T="string">
+                                @if (!string.IsNullOrEmpty(project.Technologies))
+                                {
+                                    @foreach (var tech in ParseTechnologies(project.Technologies))
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined">@tech</MudChip>
+                                    }
+                                }
+                            </MudChipSet>
+                        </MudCardContent>
+                        <MudCardActions>
+                            @if (!string.IsNullOrEmpty(project.GithubUrl))
+                            {
+                                <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Href="@project.GithubUrl" Target="_blank" />
+                            }
+                            @if (!string.IsNullOrEmpty(project.ProjectUrl))
+                            {
+                                <MudIconButton Icon="@Icons.Material.Filled.Link" Href="@project.ProjectUrl" Target="_blank" />
+                            }
+                            <MudSpacer />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteProject(project))" />
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    private List<ProjectDto> _projects = new();
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        try
+        {
+            _projects = await ApiService.GetProjectsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        var parameters = new DialogParameters { ["IsEdit"] = false };
+        var dialog = await DialogService.ShowAsync<ProjectDialog>("Add Project", parameters);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task OpenEditDialog(ProjectDto project)
+    {
+        var parameters = new DialogParameters { ["IsEdit"] = true, ["Project"] = project };
+        var dialog = await DialogService.ShowAsync<ProjectDialog>("Edit Project", parameters);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task DeleteProject(ProjectDto project)
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            "Delete", 
+            $"Are you sure you want to delete {project.Title}?", 
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (result == true)
+        {
+            try
+            {
+                await ApiService.DeleteProjectAsync(project.Id);
+                Snackbar.Add("Project deleted", Severity.Success);
+                await LoadData();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+    private void OpenImageDialog(string? imageUrl)
+    {
+        if (string.IsNullOrEmpty(imageUrl)) return;
+        var parameters = new DialogParameters { ["ImageUrl"] = imageUrl };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+        DialogService.ShowAsync<ImageDialog>("Preview", parameters, options);
+    }
+
+    private string[] ParseTechnologies(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return Array.Empty<string>();
+        try
+        {
+            return System.Text.Json.JsonSerializer.Deserialize<string[]>(json) ?? Array.Empty<string>();
+        }
+        catch
+        {
+            return Array.Empty<string>();
+        }
+    }
+}

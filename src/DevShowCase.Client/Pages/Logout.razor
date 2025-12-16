@@ -1,0 +1,16 @@
+@page "/logout"
+@using DevShowcase.Client.Services
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Logout</PageTitle>
+
+<MudText Typo="Typo.h5">Logging out...</MudText>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthService.Logout();
+        NavigationManager.NavigateTo("/");
+    }
+}

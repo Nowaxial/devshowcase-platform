@@ -16,8 +16,13 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https:/
 // 2. Auth Services
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddAuthorizationCore();
-builder.Services.AddScoped<AuthenticationStateProvider, AuthService>();
-builder.Services.AddScoped<AuthService>(); // För direkt injicering
+// Registrera AuthService först som en vanlig tjänst.
+builder.Services.AddScoped<AuthService>();
+
+// Registrera AuthenticationStateProvider så att den pekar på SAMMA instans av AuthService.
+// Detta gör att när vi anropar AuthService.Login() uppdateras också AuthenticationStateProvider automatiskt,
+// vilket triggar omritning av UI och AuthorizeView.
+builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<AuthService>());
 
 // 3. App Services
 builder.Services.AddScoped<ApiService>();

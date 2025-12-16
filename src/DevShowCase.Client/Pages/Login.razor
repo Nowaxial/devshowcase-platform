@@ -35,7 +35,7 @@
         var result = await AuthService.Login(loginModel);
         if (result.Success)
         {
-            Navigation.NavigateTo("dashboard"); // Eller vart vi nu vill gå
+            Navigation.NavigateTo("/admin/dashboard"); // Eller vart vi nu vill gå
         }
         else
         {

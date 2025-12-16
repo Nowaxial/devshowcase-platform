@@ -12,7 +12,7 @@ public class CreateProjectDto
     public string? GithubUrl { get; set; }
 
     [Url]
-    public string? LiveUrl { get; set; }
+    public string? ProjectUrl { get; set; }
 
     public string? ImageUrl { get; set; }
     public DateTime? StartDate { get; set; }

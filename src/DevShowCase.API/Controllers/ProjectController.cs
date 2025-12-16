@@ -27,7 +27,7 @@ public class ProjectController(ApplicationDbContext context) : ControllerBase
                 Description = p.Description,
                 Technologies = p.Technologies,
                 GithubUrl = p.GithubUrl,
-                LiveUrl = p.LiveUrl,
+                ProjectUrl = p.LiveUrl,
                 ImageUrl = p.ImageUrl,
                 StartDate = p.StartDate,
                 EndDate = p.EndDate,
@@ -53,7 +53,7 @@ public class ProjectController(ApplicationDbContext context) : ControllerBase
             Description = project.Description,
             Technologies = project.Technologies,
             GithubUrl = project.GithubUrl,
-            LiveUrl = project.LiveUrl,
+            ProjectUrl = project.LiveUrl,
             ImageUrl = project.ImageUrl,
             StartDate = project.StartDate,
             EndDate = project.EndDate,
@@ -74,7 +74,7 @@ public class ProjectController(ApplicationDbContext context) : ControllerBase
             Description = dto.Description,
             Technologies = dto.Technologies,
             GithubUrl = dto.GithubUrl,
-            LiveUrl = dto.LiveUrl,
+            LiveUrl = dto.ProjectUrl,
             ImageUrl = dto.ImageUrl,
             StartDate = dto.StartDate,
             EndDate = dto.EndDate,
@@ -91,7 +91,7 @@ public class ProjectController(ApplicationDbContext context) : ControllerBase
             Description = project.Description,
             Technologies = project.Technologies,
             GithubUrl = project.GithubUrl,
-            LiveUrl = project.LiveUrl,
+            ProjectUrl = project.LiveUrl,
             ImageUrl = project.ImageUrl,
             StartDate = project.StartDate,
             EndDate = project.EndDate,
@@ -111,7 +111,7 @@ public class ProjectController(ApplicationDbContext context) : ControllerBase
         project.Description = dto.Description;
         project.Technologies = dto.Technologies;
         project.GithubUrl = dto.GithubUrl;
-        project.LiveUrl = dto.LiveUrl;
+        project.LiveUrl = dto.ProjectUrl;
         project.ImageUrl = dto.ImageUrl;
         project.StartDate = dto.StartDate;
         project.EndDate = dto.EndDate;

@@ -4,12 +4,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DevShowCase.API.Data;
 
-public class ApplicationDbContext : IdentityDbContext<User>
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<User>(options)
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-        : base(options)
-    {
-    }
 
     // DbSets for all entities
     public DbSet<Experience> Experiences => Set<Experience>();
