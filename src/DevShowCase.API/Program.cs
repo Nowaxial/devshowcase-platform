@@ -1,4 +1,3 @@
-using DevShowcase.API.Services;
 using DevShowCase.API.Data;
 using DevShowCase.API.Models;
 using DevShowCase.API.Services;
@@ -6,28 +5,36 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi;
+using Microsoft.OpenApi.Models;
 using System.Text;
+
 var builder = WebApplication.CreateBuilder(args);
-// --- 1. Konfigurera Databas ---
+
+// --- 1. Database ---
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-// --- 2. Konfigurera Identity ---
+    options.UseSqlServer(connectionString));
+
+// --- 2. Identity ---
 builder.Services.AddIdentity<User, IdentityRole>(options =>
 {
-    // Lösenordskrav
     options.Password.RequireDigit = true;
     options.Password.RequireLowercase = true;
-    options.Password.RequireUppercase = true;
     options.Password.RequireNonAlphanumeric = true;
-    options.Password.RequiredLength = 8;
-
-    // Unik Email
+    options.Password.RequireUppercase = true;
+    options.Password.RequiredLength = 6;
     options.User.RequireUniqueEmail = true;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
-// --- 3. Konfigurera JWT Authentication ---
+
+builder.Services.AddScoped<ITokenService, TokenService>();
+
+// --- 3. Authentication (JWT) ---
+// HÃ¤mta JWT-instÃ¤llningar frÃ¥n appsettings.json
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]!);
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -35,28 +42,27 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
+    options.RequireHttpsMetadata = false; // SÃ¤tt till true i produktion
+    options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters
     {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
         ValidateIssuer = true,
         ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-
-        // Hämta inställningar från config
-        ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
-        ValidAudience = builder.Configuration["JwtSettings:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Secret"]!))
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"]
     };
 });
-// --- 4. Konfigurera Services ---
+
+// --- 4. Controllers & CORS ---
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddScoped<ITokenService, TokenService>();
 
-// --- 5. Konfigurera Swagger med JWT-stöd ---
+// --- 5. Swagger ---
 builder.Services.AddSwaggerGen(options =>
 {
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "DevShowCase API", Version = "v1" });
     options.AddSecurityDefinition("bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -66,9 +72,19 @@ builder.Services.AddSwaggerGen(options =>
         BearerFormat = "JWT",
         Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
     });
-    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
-        [new OpenApiSecuritySchemeReference("bearer", document)] = []
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "bearer"
+                }
+            },
+            new string[] {}
+        }
     });
 });
 
@@ -76,19 +92,20 @@ builder.Services.AddSwaggerGen(options =>
 var app = builder.Build();
 // --- 6. Pipeline Setup ---
 // Seeda databasen vid start
-DbInitializer.Seed(app);
+await DbInitializer.SeedAsync(app);
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 app.UseHttpsRedirection();
-// VIKTIGT: Ordningen är viktig här!
+// VIKTIGT: Ordningen Ã¤r viktig hÃ¤r!
 app.UseCors(builder => builder
     .AllowAnyOrigin()
     .AllowAnyMethod()
     .AllowAnyHeader());
-app.UseAuthentication(); // 1. Vem är du?
-app.UseAuthorization();  // 2. Får du vara här?
+app.UseAuthentication(); // 1. Vem Ã¤r du?
+app.UseAuthorization();  // 2. FÃ¥r du vara hÃ¤r?
 app.MapControllers();
 app.Run();

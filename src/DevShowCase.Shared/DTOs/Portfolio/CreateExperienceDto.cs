@@ -13,5 +13,6 @@ public class CreateExperienceDto
     public DateTime StartDate { get; set; }
     public DateTime? EndDate { get; set; }
     public bool IsCurrent { get; set; }
+    public string EmploymentType { get; set; } = "Full-time";
     public string ContentLanguage { get; set; } = "en";
 }

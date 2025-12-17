@@ -12,6 +12,7 @@ public class Education
     public DateTime StartDate { get; set; }
     public DateTime? EndDate { get; set; }
     public bool IsCurrent { get; set; } = false;
+    public string Location { get; set; } =string.Empty;
 
     // Multi-language support
     public string ContentLanguage { get; set; } = "en";

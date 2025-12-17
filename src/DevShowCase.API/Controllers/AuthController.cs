@@ -1,4 +1,4 @@
-﻿using DevShowcase.API.Services;
+﻿using DevShowCase.API.Services;
 using DevShowcase.Shared.DTOs.Auth;
 using DevShowCase.API.Models;
 using Microsoft.AspNetCore.Identity;

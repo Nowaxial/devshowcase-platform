@@ -29,6 +29,8 @@ public class ExperienceController(ApplicationDbContext context) : ControllerBase
                 Description = e.Description,
                 Location = e.Location,
                 IsCurrent = e.IsCurrent,
+
+                EmploymentType = e.EmploymentType,
                 ContentLanguage = e.ContentLanguage,
                 UserId = e.UserId
             })
@@ -53,6 +55,7 @@ public class ExperienceController(ApplicationDbContext context) : ControllerBase
             Description = experience.Description,
             Location = experience.Location,
             IsCurrent = experience.IsCurrent,
+            EmploymentType = experience.EmploymentType,
             ContentLanguage = experience.ContentLanguage,
             UserId = experience.UserId
         });
@@ -73,6 +76,8 @@ public class ExperienceController(ApplicationDbContext context) : ControllerBase
             StartDate = dto.StartDate,
             EndDate = dto.EndDate,
             IsCurrent = dto.IsCurrent,
+
+            EmploymentType = dto.EmploymentType,
             ContentLanguage = dto.ContentLanguage
         };
         context.Experiences.Add(experience);
@@ -88,6 +93,7 @@ public class ExperienceController(ApplicationDbContext context) : ControllerBase
             StartDate = experience.StartDate,
             EndDate = experience.EndDate,
             IsCurrent = experience.IsCurrent,
+            EmploymentType = experience.EmploymentType,
             ContentLanguage = experience.ContentLanguage,
             UserId = experience.UserId
         });
@@ -108,6 +114,8 @@ public class ExperienceController(ApplicationDbContext context) : ControllerBase
         experience.StartDate = dto.StartDate;
         experience.EndDate = dto.EndDate;
         experience.IsCurrent = dto.IsCurrent;
+        experience.IsCurrent = dto.IsCurrent;
+        experience.EmploymentType = dto.EmploymentType;
         experience.ContentLanguage = dto.ContentLanguage;
         await context.SaveChangesAsync();
         return NoContent();

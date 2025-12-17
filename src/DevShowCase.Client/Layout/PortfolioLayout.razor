@@ -1,0 +1,85 @@
+@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components.Authorization
+@using DevShowcase.Client.Shared
+
+<MudThemeProvider @ref="_mudThemeProvider" @bind-IsDarkMode="@_isDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<style>
+    /* Public Portfolio Layout Styles */
+    .portfolio-header {
+        backdrop-filter: blur(10px);
+        background-color: rgba(255, 255, 255, 0.7);
+    }
+    
+    body.dark .portfolio-header {
+        background-color: rgba(30, 30, 30, 0.7);
+    }
+</style>
+
+<MudLayout>
+    <MudAppBar Elevation="0" Color="Color.Transparent" Fixed="true" Class="portfolio-header px-4">
+        <MudText Typo="Typo.h5" Class="font-weight-bold cursor-pointer" Color="Color.Primary" @onclick="GoHome">
+            DevShowcase
+        </MudText>
+        
+        <MudSpacer />
+
+        <!-- Navigation -->
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <MudLink Href="" Color="Color.Inherit" Class="mx-2">CV</MudLink>
+            <MudLink Href="projects" Color="Color.Inherit" Class="mx-2">Projects</MudLink>
+        </MudHidden>
+
+        <!-- Dark Mode Toggle -->
+        <MudTooltip Text="@(_isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode")">
+            <MudIconButton OnClick="@((e) => OnSystemDarkModeChanged(!_isDarkMode))"
+                           Icon="@(_isDarkMode ? LucideIcons.Sun : LucideIcons.Moon)"
+                           Class="ml-2" 
+                           Color="Color.Inherit" />
+        </MudTooltip>
+
+        <!-- Admin Link (Only if Authorized) -->
+        <AuthorizeView>
+            <Authorized>
+                <MudIconButton Icon="@LucideIcons.Settings" Href="admin/dashboard" title="Admin Dashboard" Class="ml-2" Color="Color.Default" />
+            </Authorized>
+            <NotAuthorized>
+                 <MudIconButton Icon="@LucideIcons.LogIn" Href="login" title="Login" Class="ml-2" Color="Color.Default" />
+            </NotAuthorized>
+        </AuthorizeView>
+    </MudAppBar>
+
+    <MudMainContent>
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    [Inject] NavigationManager Navigation { get; set; } = null!;
+    private bool _isDarkMode = true;
+    private MudThemeProvider _mudThemeProvider = null!;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _isDarkMode = await _mudThemeProvider.GetSystemDarkModeAsync();
+            StateHasChanged();
+        }
+    }
+
+    private Task OnSystemDarkModeChanged(bool newValue)
+    {
+        _isDarkMode = newValue;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private void GoHome()
+    {
+        Navigation.NavigateTo("/");
+    }
+}

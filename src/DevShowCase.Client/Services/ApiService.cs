@@ -45,4 +45,16 @@ public class ApiService(HttpClient httpClient)
     {
         await httpClient.DeleteAsync($"api/project/{id}");
     }
+
+    public async Task<DevShowcase.Shared.DTOs.Public.PortfolioDto?> GetPortfolioAsync(string username)
+    {
+        try
+        {
+            return await httpClient.GetFromJsonAsync<DevShowcase.Shared.DTOs.Public.PortfolioDto>($"api/portfolio/{username}");
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+    }
 }

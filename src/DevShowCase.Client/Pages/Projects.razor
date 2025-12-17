@@ -1,0 +1,114 @@
+@page "/projects"
+@layout PortfolioLayout
+@using DevShowcase.Shared.DTOs.Public
+@using DevShowcase.Client.Services
+@inject ApiService ApiService
+
+<PageTitle>Projects | @(Portfolio?.FirstName ?? "Values")</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-8 mb-16">
+    <div class="d-flex flex-column align-center text-center mb-12">
+        <MudText Typo="Typo.h3" Class="font-weight-bold mb-2">Projects</MudText>
+        <MudText Typo="Typo.subtitle1" Color="Color.Secondary" Style="max-width: 600px;">
+            A selection of my recent work, side projects, and open source contributions.
+        </MudText>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="d-flex justify-center mt-12">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+        </div>
+    }
+    else if (Portfolio == null)
+    {
+        <MudAlert Severity="Severity.Error">Portfolio not found.</MudAlert>
+    }
+    else
+    {
+        <MudGrid>
+            @foreach (var project in Portfolio.Projects)
+            {
+                <MudItem xs="12" sm="6" md="4">
+                    <MudCard Elevation="3" Class="h-100 d-flex flex-column hover-card">
+                        @if (!string.IsNullOrEmpty(project.ImageUrl))
+                        {
+                            <MudCardMedia Image="@project.ImageUrl" Height="200" />
+                        }
+
+                        <MudCardContent Class="flex-grow-1">
+                            <MudText Typo="Typo.h6" Class="mb-2">@project.Title</MudText>
+                            <MudText Typo="Typo.body2" Class="mud-text-secondary mb-4">
+                                @project.Description
+                            </MudText>
+
+                            @if (!string.IsNullOrEmpty(project.Technologies))
+                            {
+                                <div class="d-flex flex-wrap gap-1 mt-auto">
+                                    @try
+                                    {
+                                        var techs = System.Text.Json.JsonSerializer.Deserialize<string[]>(project.Technologies);
+                                        if (techs != null)
+                                        {
+                                            foreach (var tech in techs.Take(4))
+                                            {
+                                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Surface">@tech</MudChip>
+                                            }
+                                            if (techs.Length > 4)
+                                            {
+                                                <MudChip T="string" Size="Size.Small" Variant="Variant.Text">@($"+{techs.Length - 4}")</MudChip>
+                                            }
+                                        }
+                                    }
+                                    catch { }
+                                </div>
+                            }
+                        </MudCardContent>
+
+                        <MudCardActions Class="mt-auto px-4 pb-4">
+                            @if (!string.IsNullOrEmpty(project.GithubUrl))
+                            {
+                                <MudButton Href="@project.GithubUrl" Target="_blank"
+                                           StartIcon="@Icons.Custom.Brands.GitHub"
+                                           Variant="Variant.Outlined" Size="Size.Small" Color="Color.Inherit" Class="mr-2">
+                                    GitHub
+                                </MudButton>
+                            }
+                            @if (!string.IsNullOrEmpty(project.ProjectUrl))
+                            {
+                                <MudButton Href="@project.ProjectUrl" Target="_blank"
+                                           StartIcon="@Icons.Material.Filled.Launch"
+                                           Variant="Variant.Filled" Size="Size.Small" Color="Color.Primary">
+                                    Live Demo
+                                </MudButton>
+                            }
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+</MudContainer>
+
+<style>
+    .hover-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+        .hover-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1) !important;
+        }
+</style>
+
+@code {
+    private PortfolioDto? Portfolio { get; set; }
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        Portfolio = await ApiService.GetPortfolioAsync("default");
+        _loading = false;
+    }
+}

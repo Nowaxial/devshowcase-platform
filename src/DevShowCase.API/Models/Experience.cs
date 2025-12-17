@@ -12,6 +12,7 @@ public class Experience
     public DateTime StartDate { get; set; }
     public DateTime? EndDate { get; set; }
     public bool IsCurrent { get; set; } = false;
+    public string EmploymentType { get; set; } = "Full-time"; // e.g. Full-time, Part-time, Contract
 
     // Multi-language support
     public string ContentLanguage { get; set; } = "en"; // ISO 639-1

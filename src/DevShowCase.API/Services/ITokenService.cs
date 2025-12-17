@@ -1,6 +1,6 @@
 ﻿using DevShowCase.API.Models;
 using System.Security.Claims;
-namespace DevShowcase.API.Services;
+namespace DevShowCase.API.Services;
 
 public interface ITokenService
 {
