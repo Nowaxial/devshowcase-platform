@@ -1,142 +1,115 @@
 ﻿@page "/"
-@using DevShowcase.Shared.DTOs.Public
 @using DevShowcase.Client.Services
-@inject ApiService ApiService
+@inject NavigationManager NavigationManager
+@inject AuthService AuthService
 
-<PageTitle>@(Portfolio?.FirstName + " " + Portfolio?.LastName ?? "Developer Portfolio")</PageTitle>
+<PageTitle>DevShowcase - Build Your Developer Portfolio</PageTitle>
 
-@if (_loading)
-{
-    <MudContainer MaxWidth="MaxWidth.Small" Class="d-flex justify-center align-center" Style="height: 80vh;">
-        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
-    </MudContainer>
-}
-else if (Portfolio == null)
-{
-    <MudContainer MaxWidth="MaxWidth.Small" Class="mt-16 text-center">
-        <MudText Typo="Typo.h4">Portfolio Not Found</MudText>
-        <MudText Typo="Typo.body1" Class="mt-2">The requested user portfolio could not be found.</MudText>
-    </MudContainer>
-}
-else
-{
-    <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-8 mb-16">
-        
-        <!-- Header / Profile -->
-        <div class="d-flex flex-column align-center text-center mb-12">
-            @if (!string.IsNullOrEmpty(Portfolio.ProfileImageUrl))
-            {
-                <MudAvatar image="@Portfolio.ProfileImageUrl" Style="height:120px; width:120px;" Class="mb-4 elevation-4" />
-            }
-            else
-            {
-                <MudAvatar Color="Color.Primary" Style="height:120px; width:120px; font-size: 3rem;" Class="mb-4 elevation-4">
-                    @(Portfolio.FirstName?.FirstOrDefault())@(Portfolio.LastName?.FirstOrDefault())
-                </MudAvatar>
-            }
-            
-            <MudText Typo="Typo.h3" Class="font-weight-bold mb-1">@Portfolio.FirstName @Portfolio.LastName</MudText>
-            <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mb-4">@Portfolio.Location</MudText>
-            
-            <MudText Typo="Typo.body1" Class="mud-text-secondary" Style="max-width: 600px;">
-                @Portfolio.Bio
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-16 mb-16">
+    <!-- HERO SECTION -->
+    <MudGrid Class="align-center justify-center my-16">
+        <MudItem xs="12" md="6" Class="d-flex flex-column gap-4">
+            <MudText Typo="Typo.h2" Class="font-weight-bold">
+                Showcase Your Code.<br />
+                <span class="mud-primary-text">Land Your Dream Job.</span>
             </MudText>
-
-            <div class="mt-6 d-flex gap-4">
-                @if (!string.IsNullOrEmpty(Portfolio.Email))
-                {
-                    <MudIconButton Icon="@Icons.Material.Filled.Email" Href="@($"mailto:{Portfolio.Email}")" Color="Color.Default" />
-                }
-                @if (!string.IsNullOrEmpty(Portfolio.GithubUrl))
-                {
-                    <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Href="@Portfolio.GithubUrl" Target="_blank" Color="Color.Default" />
-                }
-                @if (!string.IsNullOrEmpty(Portfolio.LinkedInUrl))
-                {
-                    <MudIconButton Icon="@Icons.Custom.Brands.LinkedIn" Href="@Portfolio.LinkedInUrl" Target="_blank" Color="Color.Primary" />
-                }
+            <MudText Typo="Typo.h5" Class="mud-text-secondary">
+                The modern portfolio platform for .NET developers. 
+                Automated CV generation, AI-powered bios, and beautiful, themes.
+            </MudText>
+            <div class="d-flex gap-4 mt-8">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" Href="register">
+                    Create Your Portfolio
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Large" Href="portfolio/default">
+                    View Demo Profile
+                </MudButton>
             </div>
-        </div>
-
-        <MudDivider Class="my-8" />
-
-        <!-- Experience Section -->
-        @if (Portfolio.Experiences.Any())
-        {
-            <MudText Typo="Typo.h5" Class="font-weight-bold mb-6">Experience</MudText>
-            <div class="d-flex flex-column gap-6">
-                @foreach (var exp in Portfolio.Experiences)
-                {
-                    <div class="d-flex gap-4">
-                        <div class="d-flex flex-column align-center">
-                             <MudIcon Icon="@Icons.Material.Filled.Work" Size="Size.Small" Color="Color.Primary" Class="mt-1" />
-                             <div style="width: 2px; flex-grow: 1; background-color: var(--mud-palette-divider);" class="my-2"></div>
-                        </div>
-                        <div class="pb-6">
-                            <MudText Typo="Typo.h6">@exp.Position</MudText>
-                            <MudText Typo="Typo.subtitle1" Color="Color.Secondary">@exp.Company • @exp.Location</MudText>
-                            <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2 d-block">
-                                @exp.StartDate.ToString("MMM yyyy") - @(exp.IsCurrent ? "Present" : exp.EndDate?.ToString("MMM yyyy"))
-                            </MudText>
-                            <MudText Typo="Typo.body2" Class="mt-2" Style="white-space: pre-line;">@exp.Description</MudText>
-                        </div>
-                    </div>
-                }
+            <div class="mt-4 d-flex align-center gap-2">
+                 <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small"/>
+                 <MudText Typo="Typo.body2">Free for developers</MudText>
+                 <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" Class="ml-4"/>
+                 <MudText Typo="Typo.body2">Open Source</MudText>
             </div>
-            
-            <MudDivider Class="my-8" />
-        }
+        </MudItem>
+        <MudItem xs="12" md="6" Class="d-flex justify-center">
+            <!-- Hero Visual / Mockup -->
+            <MudPaper Elevation="4" Class="pa-4 rounded-lg d-flex align-center justify-center mud-theme-primary" Style="width: 100%; height: 400px; background: linear-gradient(135deg, var(--mud-palette-primary) 0%, var(--mud-palette-secondary) 100%);">
+                 <MudIcon Icon="@Icons.Custom.Brands.Microsoft" Size="Size.Large" Style="font-size: 8rem; color: white; opacity: 0.8;" />
+                 <MudText Typo="Typo.h1" Style="color: white; font-weight: 900; opacity: 0.2; position: absolute;">.NET</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
 
-        <!-- Projects Check (Just a teaser, mainly explicitly in /projects) -->
-        @if (Portfolio.Projects.Any())
-        {
-             <div class="d-flex justify-space-between align-center mb-6">
-                <MudText Typo="Typo.h5" Class="font-weight-bold">Recent Projects</MudText>
-                <MudButton EndIcon="@Icons.Material.Filled.ArrowForward" Href="projects" Variant="Variant.Text" Color="Color.Primary">View All</MudButton>
-            </div>
-            
-            <MudGrid>
-                @foreach (var project in Portfolio.Projects.Take(2))
-                {
-                     <MudItem xs="12" md="6">
-                        <MudCard Elevation="2" Class="h-100">
-                             @if (!string.IsNullOrEmpty(project.ImageUrl))
-                            {
-                                <MudCardMedia Image="@project.ImageUrl" Height="160" />
-                            }
-                            <MudCardContent>
-                                <MudText Typo="Typo.h6">@project.Title</MudText>
-                                <MudText Typo="Typo.body2" Class="mud-text-secondary mt-2 line-clamp-3">@project.Description</MudText>
-                            </MudCardContent>
-                            <MudCardActions>
-                                @if (!string.IsNullOrEmpty(project.GithubUrl))
-                                {
-                                    <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Href="@project.GithubUrl" Target="_blank" Size="Size.Small" />
-                                }
-                                @if (!string.IsNullOrEmpty(project.ProjectUrl))
-                                {
-                                    <MudIconButton Icon="@Icons.Material.Filled.Link" Href="@project.ProjectUrl" Target="_blank" Size="Size.Small" Color="Color.Primary" />
-                                }
-                            </MudCardActions>
-                        </MudCard>
-                     </MudItem>
-                }
-            </MudGrid>
-        }
+    <MudDivider Class="my-16" />
 
-    </MudContainer>
-}
+    <!-- FEATURES SECTION -->
+    <MudText Typo="Typo.h3" Align="Align.Center" Class="mb-12 font-weight-bold">Why DevShowcase?</MudText>
+
+    <MudGrid Spacing="4">
+        <MudItem xs="12" md="4">
+            <MudCard Elevation="2" Class="h-100 py-8 px-4 text-center">
+                <div class="d-flex justify-center mb-4">
+                    <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large">
+                        <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Large" />
+                    </MudAvatar>
+                </div>
+                <MudText Typo="Typo.h5" Class="font-weight-bold mb-2">Automated CVs</MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                    Stop wrestling with Word templates. 
+                    Your portfolio automatically generates a professional, clean CV/Resume based on your data.
+                </MudText>
+            </MudCard>
+        </MudItem>
+         <MudItem xs="12" md="4">
+            <MudCard Elevation="2" Class="h-100 py-8 px-4 text-center">
+                <div class="d-flex justify-center mb-4">
+                     <MudAvatar Color="Color.Secondary" Variant="Variant.Filled" Size="Size.Large">
+                        <MudIcon Icon="@Icons.Material.Filled.AutoAwesome" Size="Size.Large" />
+                    </MudAvatar>
+                </div>
+                <MudText Typo="Typo.h5" Class="font-weight-bold mb-2">AI-Powered Writing</MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                    Stuck on your bio? Let our integrated AI assistant generate compelling descriptions for your projects and experience.
+                </MudText>
+            </MudCard>
+        </MudItem>
+         <MudItem xs="12" md="4">
+            <MudCard Elevation="2" Class="h-100 py-8 px-4 text-center">
+                <div class="d-flex justify-center mb-4">
+                     <MudAvatar Color="Color.Tertiary" Variant="Variant.Filled" Size="Size.Large">
+                        <MudIcon Icon="@Icons.Material.Filled.Palette" Size="Size.Large" />
+                    </MudAvatar>
+                </div>
+                <MudText Typo="Typo.h5" Class="font-weight-bold mb-2">Role-Based Themes</MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                    Whether you're a Backend wizard or a Frontend artist, choose a theme that fits your specific role and personality.
+                </MudText>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+
+    <MudDivider Class="my-16" />
+
+    <!-- FOOTER CTA -->
+    <div class="text-center mb-16">
+        <MudText Typo="Typo.h4" Class="font-weight-bold mb-4">Ready to showcase your work?</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" Href="register">
+            Get Started Now
+        </MudButton>
+         <MudText Typo="Typo.body2" Class="mud-text-secondary mt-4">No credit card required.</MudText>
+    </div>
+
+</MudContainer>
 
 @code {
-    private PortfolioDto? Portfolio { get; set; }
-    private bool _loading = true;
-
     protected override async Task OnInitializedAsync()
     {
-        _loading = true;
-        // In a real multi-user scenarios, we might get username from route param.
-        // For DevShowcase, we fetch "default" (first user).
-        Portfolio = await ApiService.GetPortfolioAsync("default");
-        _loading = false;
+        // Optional: Redirect logged-in users to their dashboard?
+        // var state = await AuthService.GetAuthenticationStateAsync();
+        // if (state.User.Identity.IsAuthenticated)
+        // {
+        //     NavigationManager.NavigateTo("/admin/dashboard");
+        // }
     }
 }

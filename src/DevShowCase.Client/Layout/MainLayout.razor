@@ -8,8 +8,8 @@
 <MudSnackbarProvider />
 
 <style>
-    /* Lucide icons are stroke-based. MudBlazor defaults to fill. 
-       We need to override this for our custom SVG icons. */
+    /* Lucide icons are stroke-based. MudBlazor defaults to fill.
+           We need to override this for our custom SVG icons. */
     .lucide-icon {
         fill: none !important;
         stroke: currentColor;
@@ -22,7 +22,7 @@
 <MudLayout>
     <MudAppBar Elevation="1" Color="Color.Surface" Dense="false">
         <MudText Typo="Typo.h5" Class="ml-3 font-weight-bold" Color="Color.Primary">DevShowcase</MudText>
-        
+
         <MudSpacer />
 
         <!-- Desktop Navigation -->
@@ -31,10 +31,27 @@
 
             <AuthorizeView>
                 <Authorized>
-                    <MudButton Href="admin/dashboard" Variant="Variant.Text" StartIcon="@LucideIcons.Dashboard" IconClass="lucide-icon">Dashboard</MudButton>
-                    <MudButton Href="admin/experience" Variant="Variant.Text" StartIcon="@LucideIcons.Briefcase" IconClass="lucide-icon">Experience</MudButton>
-                    <MudButton Href="admin/projects" Variant="Variant.Text" StartIcon="@LucideIcons.Code" IconClass="lucide-icon">Projects</MudButton>
-                    <MudButton Href="logout" Variant="Variant.Text" StartIcon="@LucideIcons.LogOut" IconClass="lucide-icon" Color="Color.Error">Logout</MudButton>
+                    <MudButton Href="admin/dashboard" Variant="Variant.Text" StartIcon="@LucideIcons.Dashboard" IconClass="lucide-icon">
+                        Dashboard
+                    </MudButton>
+                    <MudButton Href="admin/experience" Variant="Variant.Text" StartIcon="@LucideIcons.Briefcase" IconClass="lucide-icon">
+                        Experience
+                    </MudButton>
+                    <MudButton Href="admin/projects" Variant="Variant.Text" StartIcon="@LucideIcons.Code" IconClass="lucide-icon">
+                        Projects
+                    </MudButton>
+                    <MudButton Href="admin/education" Variant="Variant.Text" StartIcon="@LucideIcons.GraduationCap" IconClass="lucide-icon">
+                        Education
+                    </MudButton>
+                    <MudButton Href="admin/skills" Variant="Variant.Text" StartIcon="@LucideIcons.Wrench" IconClass="lucide-icon">
+                        Skills
+                    </MudButton>
+                    <MudButton Href="admin/profile" Variant="Variant.Text" StartIcon="@LucideIcons.User" IconClass="lucide-icon">
+                        Profile
+                    </MudButton>
+                    <MudButton Href="logout" Variant="Variant.Text" StartIcon="@LucideIcons.LogOut" IconClass="lucide-icon" Color="Color.Error">
+                        Logout
+                    </MudButton>
                 </Authorized>
                 <NotAuthorized>
                     <MudButton Href="login" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@LucideIcons.LogIn" IconClass="lucide-icon" Class="mr-2">Login</MudButton>
@@ -47,10 +64,10 @@
         <MudTooltip Text="@(_isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode")">
             <MudIconButton OnClick="@((e) => OnSystemDarkModeChanged(!_isDarkMode))"
                            Icon="@(_isDarkMode ? LucideIcons.Sun : LucideIcons.Moon)"
-                           Class="lucide-icon ml-4" 
+                           Class="lucide-icon ml-4"
                            Color="Color.Inherit" />
         </MudTooltip>
-        
+
         <!-- Mobile Menu (Hamburger) -->
         <MudHidden Breakpoint="Breakpoint.LgAndUp">
             <MudIconButton Icon="@LucideIcons.Dashboard" Class="lucide-icon ml-2" Color="Color.Inherit" OnClick="@((e) => DrawerToggle())" />

@@ -1,0 +1,97 @@
+@page "/admin/profile"
+@using DevShowcase.Client.Services
+@using DevShowcase.Shared.DTOs.Profile
+@inject ApiService ApiService
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-8">
+    <MudText Typo="Typo.h4" Class="font-weight-bold mb-2">Profile Settings</MudText>
+    <MudText Typo="Typo.body2" Class="mud-text-secondary mb-6">Update your personal information and portfolio preferences</MudText>
+
+    @if (_loading)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    }
+    else
+    {
+        <MudCard Elevation="2" Class="pa-4">
+            <MudForm @ref="_form" @bind-IsValid="_isValid">
+                
+                <MudText Typo="Typo.h6" Class="mb-4">Basic Information</MudText>
+                
+                <div class="d-flex gap-4">
+                    <MudTextField @bind-Value="_profile.FirstName" Label="First Name" Required="true" />
+                    <MudTextField @bind-Value="_profile.LastName" Label="Last Name" Required="true" />
+                </div>
+                
+                <MudTextField @bind-Value="_profile.Location" Label="Location" Class="mt-4" HelperText="e.g. Stockholm, Sweden" />
+                
+                <MudTextField @bind-Value="_profile.ProfileImageUrl" Label="Profile Image URL" Class="mt-4" HelperText="Direct link to your profile picture" />
+
+                <MudTextField @bind-Value="_profile.Bio" Label="Bio / About Me" Lines="5" Class="mt-4" HelperText="Use markdown or plain text. This is your chance to verify the AI generated bio." />
+
+                <MudDivider Class="my-6" />
+                
+                <MudText Typo="Typo.h6" Class="mb-4">Preferences</MudText>
+                
+                 <MudSelect @bind-Value="_profile.PreferredLanguage" Label="Preferred Content Language" AnchorOrigin="Origin.BottomCenter">
+                    <MudSelectItem Value="@("en")">English</MudSelectItem>
+                    <MudSelectItem Value="@("sv")">Swedish</MudSelectItem>
+                </MudSelect>
+                
+                <MudSwitch @bind-Value="_profile.PrefersDarkMode" Label="Prefer Dark Mode by default" Color="Color.Primary" Class="mt-4" />
+
+                <!-- Theme Selection could go here or in a separate Theme page -->
+                
+                <div class="d-flex justify-end mt-8">
+                     <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" OnClick="SaveProfile" Disabled="@(!_isValid)">
+                        Save Changes
+                    </MudButton>
+                </div>
+
+            </MudForm>
+        </MudCard>
+    }
+</MudContainer>
+
+@code {
+    private UpdateProfileDto _profile = new();
+    private bool _loading = true;
+    private MudForm _form = null!;
+    private bool _isValid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProfile();
+    }
+
+    private async Task LoadProfile()
+    {
+        _loading = true;
+        var profile = await ApiService.GetMyProfileAsync();
+        if (profile != null)
+        {
+            _profile = profile;
+        }
+        _loading = false;
+    }
+
+    private async Task SaveProfile()
+    {
+        await _form.Validate();
+        if (!_isValid) return;
+
+        try
+        {
+            await ApiService.UpdateProfileAsync(_profile);
+            Snackbar.Add("Profile updated successfully", Severity.Success);
+            
+            // Optional: Refresh local state or notify MainLayout if Name/Theme changed
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Error updating profile", Severity.Error);
+        }
+    }
+}

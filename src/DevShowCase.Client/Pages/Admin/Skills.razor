@@ -1,0 +1,166 @@
+@page "/admin/skills"
+@using DevShowcase.Client.Services
+@using DevShowcase.Shared.DTOs.Portfolio
+@inject ApiService ApiService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
+    <div class="d-flex justify-space-between align-center mb-6">
+        <div>
+            <MudText Typo="Typo.h4" Class="font-weight-bold">Skills</MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">Showcase your technical expertise</MudText>
+        </div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateDialog">
+            Add Skill
+        </MudButton>
+    </div>
+
+    @if (_loading)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    }
+    else if (!_skillList.Any())
+    {
+        <MudAlert Severity="Severity.Info">No skills found. Start adding some!</MudAlert>
+    }
+    else
+    {
+        <!-- Grouping by Category -->
+        @foreach (var group in _skillList.GroupBy(s => s.Category ?? "Other").OrderBy(g => g.Key))
+        {
+            <MudText Typo="Typo.h6" Class="mt-6 mb-2 text-uppercase font-weight-bold" Color="Color.Secondary">@group.Key</MudText>
+            <MudPaper Class="pa-4">
+                <MudChipSet T="string" wrap="true">
+                    @foreach (var skill in group.OrderBy(s => s.DisplayOrder))
+                    {
+                        <MudChip T="string" Variant="Variant.Text" Color="Color.Primary" OnClose="@(() => DeleteSkill(skill))" OnClick="@(() => OpenEditDialog(skill))">
+                            @skill.Name
+                        </MudChip>
+                    }
+                </MudChipSet>
+            </MudPaper>
+        }
+    }
+</MudContainer>
+
+<!-- Dialog for Create/Edit -->
+<MudDialog @bind-isvisible="_dialogVisible" Options="new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true }">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@(_isEditing ? "Edit Skill" : "Add Skill")</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_isValid">
+            <MudTextField @bind-Value="_currentSkill.Name" Label="Skill Name" Required="true" RequiredError="Name is required" />
+            
+            <MudSelect @bind-Value="_currentSkill.Category" Label="Category" AnchorOrigin="Origin.BottomCenter">
+                <MudSelectItem Value="@("Frontend")">Frontend</MudSelectItem>
+                <MudSelectItem Value="@("Backend")">Backend</MudSelectItem>
+                <MudSelectItem Value="@("Fullstack")">Fullstack</MudSelectItem>
+                <MudSelectItem Value="@("Database")">Database</MudSelectItem>
+                <MudSelectItem Value="@("DevOps")">DevOps</MudSelectItem>
+                <MudSelectItem Value="@("Tools")">Tools</MudSelectItem>
+                <MudSelectItem Value="@("Soft Skills")">Soft Skills</MudSelectItem>
+                 <MudSelectItem Value="@("Other")">Other</MudSelectItem>
+            </MudSelect>
+
+            <MudNumericField @bind-Value="_currentSkill.DisplayOrder" Label="Display Order" Min="0" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseDialog">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveSkill" Disabled="@(!_isValid)">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<SkillDto> _skillList = new();
+    private bool _loading = true;
+
+    // Dialog state
+    private bool _dialogVisible;
+    private bool _isEditing;
+    private CreateSkillDto _currentSkill = new();
+    private int _editingId;
+    private MudForm _form = null!;
+    private bool _isValid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSkills();
+    }
+
+    private async Task LoadSkills()
+    {
+        _loading = true;
+        _skillList = await ApiService.GetSkillsAsync();
+        _loading = false;
+    }
+
+    private void OpenCreateDialog()
+    {
+        _isEditing = false;
+        _currentSkill = new CreateSkillDto { Category = "Other" };
+        _dialogVisible = true;
+    }
+
+    private void OpenEditDialog(SkillDto skill)
+    {
+        _isEditing = true;
+        _editingId = skill.Id;
+        _currentSkill = new CreateSkillDto
+        {
+            Name = skill.Name,
+            Category = skill.Category,
+            DisplayOrder = skill.DisplayOrder
+        };
+        _dialogVisible = true;
+    }
+
+    private void CloseDialog()
+    {
+        _dialogVisible = false;
+    }
+
+    private async Task SaveSkill()
+    {
+        await _form.Validate();
+        if (!_isValid) return;
+
+        try
+        {
+            if (_isEditing)
+            {
+                await ApiService.UpdateSkillAsync(_editingId, _currentSkill);
+                Snackbar.Add("Skill updated", Severity.Success);
+            }
+            else
+            {
+                await ApiService.CreateSkillAsync(_currentSkill);
+                Snackbar.Add("Skill added", Severity.Success);
+            }
+
+            _dialogVisible = false;
+            await LoadSkills();
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Error saving skill", Severity.Error);
+        }
+    }
+
+    private async Task DeleteSkill(SkillDto skill)
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Delete Skill",
+            $"Are you sure you want to delete {skill.Name}?",
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (result == true)
+        {
+            await ApiService.DeleteSkillAsync(skill.Id);
+            Snackbar.Add("Skill deleted", Severity.Success);
+            await LoadSkills();
+        }
+    }
+}

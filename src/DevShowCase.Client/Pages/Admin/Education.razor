@@ -1,0 +1,203 @@
+@page "/admin/education"
+@using DevShowcase.Client.Services
+@using DevShowcase.Shared.DTOs.Portfolio
+@inject ApiService ApiService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
+    <div class="d-flex justify-space-between align-center mb-6">
+        <div>
+            <MudText Typo="Typo.h4" Class="font-weight-bold">Education</MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">Manage your academic background and certifications</MudText>
+        </div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateDialog">
+            Add Education
+        </MudButton>
+    </div>
+
+    @if (_loading)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    }
+    else if (!_educationList.Any())
+    {
+        <MudAlert Severity="Severity.Info">No education entries found. Add your first one!</MudAlert>
+    }
+    else
+    {
+        <MudGrid>
+            @foreach (var edu in _educationList)
+            {
+                <MudItem xs="12" md="6">
+                    <MudCard Elevation="2" Class="h-100">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">@edu.Institution</MudText>
+                                <MudText Typo="Typo.subtitle1" Color="Color.Secondary">@edu.Degree @(string.IsNullOrEmpty(edu.Field) ? "" : $"in {edu.Field}")</MudText>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="@(() => OpenEditDialog(edu))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteEducation(edu))" />
+                            </CardHeaderActions>
+                        </MudCardHeader>
+                        <MudCardContent>
+                             <MudText Typo="Typo.body2" Class="mb-2">
+                                <MudIcon Icon="@Icons.Material.Filled.CalendarToday" Size="Size.Small" Class="mr-1" />
+                                @edu.StartDate.ToString("MMM yyyy") - @(edu.IsCurrent ? "Present" : edu.EndDate?.ToString("MMM yyyy"))
+                            </MudText>
+                            @if (!string.IsNullOrEmpty(edu.Location))
+                            {
+                                <MudText Typo="Typo.body2" Class="mb-3">
+                                    <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" Class="mr-1" />
+                                    @edu.Location
+                                </MudText>
+                            }
+                            <MudText Typo="Typo.body2" Class="mud-text-secondary">@edu.Description</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+</MudContainer>
+
+<!-- Dialog for Create/Edit -->
+<MudDialog @bind-isvisible="_dialogVisible" Options="new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true }">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@(_isEditing ? "Edit Education" : "Add Education")</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_isValid">
+            <MudTextField @bind-Value="_currentEducation.Institution" Label="Institution" Required="true" RequiredError="Institution is required" />
+            <MudTextField @bind-Value="_currentEducation.Degree" Label="Degree" Required="true" RequiredError="Degree is required" />
+            <MudTextField @bind-Value="_currentEducation.Field" Label="Field of Study" />
+            <MudTextField @bind-Value="_currentEducation.Location" Label="Location" />
+            
+            <div class="d-flex gap-4 my-4">
+                <MudDatePicker Label="Start Date" @bind-Date="_startDate" Required="true" />
+                <MudDatePicker Label="End Date" @bind-Date="_endDate" Disabled="@_currentEducation.IsCurrent" />
+            </div>
+            
+            <MudCheckBox @bind-Value="_currentEducation.IsCurrent" Label="I am currently studying here" Color="Color.Primary" />
+            
+            <MudTextField @bind-Value="_currentEducation.Description" Label="Description" Lines="3" Class="mt-2" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseDialog">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveEducation" Disabled="@(!_isValid)">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<EducationDto> _educationList = new();
+    private bool _loading = true;
+    
+    // Dialog state
+    private bool _dialogVisible;
+    private bool _isEditing;
+    private CreateEducationDto _currentEducation = new();
+    private int _editingId;
+    private MudForm _form = null!;
+    private bool _isValid;
+    
+    // Date handling helpers (MudDatePicker uses DateTime?)
+    private DateTime? _startDate;
+    private DateTime? _endDate;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEducation();
+    }
+
+    private async Task LoadEducation()
+    {
+        _loading = true;
+        _educationList = await ApiService.GetEducationAsync();
+        _loading = false;
+    }
+
+    private void OpenCreateDialog()
+    {
+        _isEditing = false;
+        _currentEducation = new CreateEducationDto { StartDate = DateTime.Today };
+        _startDate = DateTime.Today;
+        _endDate = null;
+        _dialogVisible = true;
+    }
+
+    private void OpenEditDialog(EducationDto edu)
+    {
+        _isEditing = true;
+        _editingId = edu.Id;
+        _currentEducation = new CreateEducationDto
+        {
+            Institution = edu.Institution,
+            Degree = edu.Degree,
+            Field = edu.Field,
+            Description = edu.Description,
+            StartDate = edu.StartDate,
+            EndDate = edu.EndDate,
+            IsCurrent = edu.IsCurrent,
+            Location = edu.Location
+        };
+        
+        _startDate = edu.StartDate;
+        _endDate = edu.EndDate;
+        
+        _dialogVisible = true;
+    }
+
+    private void CloseDialog()
+    {
+        _dialogVisible = false;
+    }
+
+    private async Task SaveEducation()
+    {
+        await _form.Validate();
+        if (!_isValid) return;
+
+        // Map dates back
+        if (_startDate.HasValue) _currentEducation.StartDate = _startDate.Value;
+        _currentEducation.EndDate = _endDate;
+
+        try
+        {
+            if (_isEditing)
+            {
+                await ApiService.UpdateEducationAsync(_editingId, _currentEducation);
+                Snackbar.Add("Education updated", Severity.Success);
+            }
+            else
+            {
+                await ApiService.CreateEducationAsync(_currentEducation);
+                Snackbar.Add("Education added", Severity.Success);
+            }
+            
+            _dialogVisible = false;
+            await LoadEducation();
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Error saving education", Severity.Error);
+        }
+    }
+
+    private async Task DeleteEducation(EducationDto edu)
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Delete Education", 
+            $"Are you sure you want to delete {edu.Institution}?", 
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (result == true)
+        {
+            await ApiService.DeleteEducationAsync(edu.Id);
+            Snackbar.Add("Education deleted", Severity.Success);
+            await LoadEducation();
+        }
+    }
+}
