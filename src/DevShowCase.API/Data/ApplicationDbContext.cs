@@ -119,6 +119,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasIndex(p => p.UserId);
 
         modelBuilder.Entity<ContactMessage>()
-            .HasIndex(c => new { c.UserId, c.CreatedAt });
+            .HasIndex(c => new { c.UserId, c.SentDate });
     }
 }
