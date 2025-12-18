@@ -1,0 +1,172 @@
+@page "/admin/languages"
+@using DevShowcase.Client.Services
+@using DevShowcase.Shared.DTOs.Portfolio
+@inject ApiService ApiService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
+    <div class="d-flex justify-space-between align-center mb-6">
+        <div>
+            <MudText Typo="Typo.h4" Class="font-weight-bold">Languages</MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">Your linguistic proficiency</MudText>
+        </div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateDialog">
+            Add Language
+        </MudButton>
+    </div>
+
+    @if (_loading)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    }
+    else if (!_languageList.Any())
+    {
+        <MudAlert Severity="Severity.Info">No languages found. Start adding some!</MudAlert>
+    }
+    else
+    {
+        <MudGrid>
+            @foreach (var language in _languageList)
+            {
+                <MudItem xs="12" sm="6" md="4">
+                    <MudPaper Elevation="2" Class="pa-4 d-flex justify-space-between align-center">
+                        <div>
+                            <MudText Typo="Typo.h6">@language.Name</MudText>
+                            <MudChip T="string" Color="@GetProficiencyColor(language.ProficiencyLevel)" Size="Size.Small" Variant="Variant.Text">@language.ProficiencyLevel</MudChip>
+                        </div>
+                        <div class="d-flex">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="@(() => OpenEditDialog(language))" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteLanguage(language))" />
+                        </div>
+                    </MudPaper>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+</MudContainer>
+
+<!-- Dialog for Create/Edit -->
+<MudDialog @bind-IsVisible="_dialogVisible" Options="new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true }">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@(_isEditing ? "Edit Language" : "Add Language")</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_isValid">
+            <MudTextField @bind-Value="_currentLanguage.Name" Label="Language Name" Required="true" RequiredError="Name is required" placeholder="e.g., English, Swedish" />
+            
+            <MudSelect @bind-Value="_currentLanguage.ProficiencyLevel" Label="Proficiency Level" AnchorOrigin="Origin.BottomCenter" Required="true">
+                <MudSelectItem Value="@("Native")">Native</MudSelectItem>
+                <MudSelectItem Value="@("Fluent")">Fluent</MudSelectItem>
+                <MudSelectItem Value="@("Professional")">Professional</MudSelectItem>
+                <MudSelectItem Value="@("Intermediate")">Intermediate</MudSelectItem>
+                <MudSelectItem Value="@("Basic")">Basic</MudSelectItem>
+            </MudSelect>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseDialog">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveLanguage" Disabled="@(!_isValid)">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<LanguageDto> _languageList = new();
+    private bool _loading = true;
+
+    // Dialog state
+    private bool _dialogVisible;
+    private bool _isEditing;
+    private CreateLanguageDto _currentLanguage = new();
+    private int _editingId;
+    private MudForm _form = null!;
+    private bool _isValid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLanguages();
+    }
+
+    private async Task LoadLanguages()
+    {
+        _loading = true;
+        _languageList = await ApiService.GetLanguagesAsync();
+        _loading = false;
+    }
+
+    private void OpenCreateDialog()
+    {
+        _isEditing = false;
+        _currentLanguage = new CreateLanguageDto { ProficiencyLevel = "Professional" };
+        _dialogVisible = true;
+    }
+
+    private void OpenEditDialog(LanguageDto language)
+    {
+        _isEditing = true;
+        _editingId = language.Id;
+        _currentLanguage = new CreateLanguageDto
+        {
+            Name = language.Name,
+            ProficiencyLevel = language.ProficiencyLevel,
+            ContentLanguage = language.ContentLanguage
+        };
+        _dialogVisible = true;
+    }
+
+    private void CloseDialog()
+    {
+        _dialogVisible = false;
+    }
+
+    private async Task SaveLanguage()
+    {
+        await _form.Validate();
+        if (!_isValid) return;
+
+        try
+        {
+            if (_isEditing)
+            {
+                await ApiService.UpdateLanguageAsync(_editingId, _currentLanguage);
+                Snackbar.Add("Language updated", Severity.Success);
+            }
+            else
+            {
+                await ApiService.CreateLanguageAsync(_currentLanguage);
+                Snackbar.Add("Language added", Severity.Success);
+            }
+
+            _dialogVisible = false;
+            await LoadLanguages();
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Error saving language", Severity.Error);
+        }
+    }
+
+    private async Task DeleteLanguage(LanguageDto language)
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Delete Language",
+            $"Are you sure you want to delete {language.Name}?",
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (result == true)
+        {
+            await ApiService.DeleteLanguageAsync(language.Id);
+            Snackbar.Add("Language deleted", Severity.Success);
+            await LoadLanguages();
+        }
+    }
+
+    private Color GetProficiencyColor(string level) => level switch
+    {
+        "Native" => Color.Primary,
+        "Fluent" => Color.Success,
+        "Professional" => Color.Info,
+        "Intermediate" => Color.Warning,
+        _ => Color.Default
+    };
+}

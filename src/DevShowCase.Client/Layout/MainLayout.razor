@@ -32,10 +32,20 @@
             <AuthorizeView>
                 <Authorized>
                     <MudButton Href="admin/dashboard" Variant="Variant.Text" StartIcon="@LucideIcons.Dashboard" IconClass="lucide-icon">Dashboard</MudButton>
-                    <MudButton Href="admin/experience" Variant="Variant.Text" StartIcon="@LucideIcons.Briefcase" IconClass="lucide-icon">Experience</MudButton>
-                    <MudButton Href="admin/projects" Variant="Variant.Text" StartIcon="@LucideIcons.Code" IconClass="lucide-icon">Projects</MudButton>
-                    <MudButton Href="admin/education" Variant="Variant.Text" StartIcon="@LucideIcons.GraduationCap" IconClass="lucide-icon">Education</MudButton>
-                    <MudButton Href="admin/skills" Variant="Variant.Text" StartIcon="@LucideIcons.Wrench" IconClass="lucide-icon">Skills</MudButton>
+                    
+                    <MudMenu Label="Content" StartIcon="@LucideIcons.Layers" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" IconClass="lucide-icon" Variant="Variant.Text">
+                        <MudMenuItem Icon="@LucideIcons.Briefcase" IconClass="lucide-icon" href="admin/experience">Experience</MudMenuItem>
+                        <MudMenuItem Icon="@LucideIcons.Code" IconClass="lucide-icon" href="admin/projects">Projects</MudMenuItem>
+                        <MudMenuItem Icon="@LucideIcons.GraduationCap" IconClass="lucide-icon" href="admin/education">Education</MudMenuItem>
+                        <MudMenuItem Icon="@LucideIcons.Wrench" IconClass="lucide-icon" href="admin/skills">Skills</MudMenuItem>
+                        <MudMenuItem Icon="@LucideIcons.Award" IconClass="lucide-icon" href="admin/licenses">Licenses</MudMenuItem>
+                        <MudMenuItem Icon="@LucideIcons.Languages" IconClass="lucide-icon" href="admin/languages">Languages</MudMenuItem>
+                        <MudMenuItem Icon="@LucideIcons.Layers" IconClass="lucide-icon" href="admin/techstack">Tech Stack</MudMenuItem>
+                        <MudMenuItem Icon="@LucideIcons.Sparkles" IconClass="lucide-icon" href="admin/competencies">Competencies</MudMenuItem>
+                    </MudMenu>
+
+                    <MudButton Href="admin/messages" Variant="Variant.Text" StartIcon="@LucideIcons.MessageSquare" IconClass="lucide-icon">Messages</MudButton>
+                    <MudButton Href="admin/settings" Variant="Variant.Text" StartIcon="@LucideIcons.Settings" IconClass="lucide-icon">Settings</MudButton>
                     <MudButton Href="admin/profile" Variant="Variant.Text" StartIcon="@LucideIcons.User" IconClass="lucide-icon">Profile</MudButton>
                     <MudButton Href="logout" Variant="Variant.Text" StartIcon="@LucideIcons.LogOut" IconClass="lucide-icon" Color="Color.Error">Logout</MudButton>
                 </Authorized>

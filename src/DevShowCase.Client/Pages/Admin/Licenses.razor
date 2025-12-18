@@ -1,0 +1,208 @@
+@page "/admin/licenses"
+@using DevShowcase.Client.Services
+@using DevShowcase.Shared.DTOs.Portfolio
+@inject ApiService ApiService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
+    <div class="d-flex justify-space-between align-center mb-6">
+        <div>
+            <MudText Typo="Typo.h4" Class="font-weight-bold">Licenses & Certifications</MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">Manage your professional credentials</MudText>
+        </div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateDialog">
+            Add License
+        </MudButton>
+    </div>
+
+    @if (_loading)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    }
+    else if (!_licenseList.Any())
+    {
+        <MudAlert Severity="Severity.Info">No licenses found. Start adding some!</MudAlert>
+    }
+    else
+    {
+        <MudGrid>
+            @foreach (var license in _licenseList)
+            {
+                <MudItem xs="12" md="6">
+                    <MudCard Elevation="2" Class="pa-4 h-100">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">@license.Name</MudText>
+                                <MudText Typo="Typo.body2">@license.IssuingOrganization</MudText>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="@(() => OpenEditDialog(license))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteLicense(license))" />
+                            </CardHeaderActions>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudText Typo="Typo.body2"><b>Issued:</b> @license.IssueDate.ToString("MMM yyyy")</MudText>
+                            @if (license.ExpirationDate.HasValue)
+                            {
+                                <MudText Typo="Typo.body2"><b>Expires:</b> @license.ExpirationDate.Value.ToString("MMM yyyy")</MudText>
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.body2"><b>No Expiration</b></MudText>
+                            }
+                            @if (!string.IsNullOrEmpty(license.CredentialId))
+                            {
+                                <MudText Typo="Typo.body2"><b>Credential ID:</b> @license.CredentialId</MudText>
+                            }
+                        </MudCardContent>
+                        @if (!string.IsNullOrEmpty(license.CredentialUrl))
+                        {
+                            <MudCardActions>
+                                <MudButton Variant="Variant.Text" Color="Color.Primary" Href="@license.CredentialUrl" Target="_blank" StartIcon="@Icons.Material.Filled.Link">Verify</MudButton>
+                            </MudCardActions>
+                        }
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+</MudContainer>
+
+<!-- Dialog for Create/Edit -->
+<MudDialog @bind-IsVisible="_dialogVisible" Options="new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true }">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@(_isEditing ? "Edit License" : "Add License")</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_isValid">
+            <MudTextField @bind-Value="_currentLicense.Name" Label="License Name" Required="true" RequiredError="Name is required" />
+            <MudTextField @bind-Value="_currentLicense.IssuingOrganization" Label="Issuing Organization" Required="true" RequiredError="Organization is required" />
+            
+            <MudGrid>
+                <MudItem xs="6">
+                    <MudDatePicker Label="Issue Date" @bind-Date="_issueDate" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudDatePicker Label="Expiration Date" @bind-Date="_expirationDate" Clearable="true" />
+                </MudItem>
+            </MudGrid>
+
+            <MudTextField @bind-Value="_currentLicense.CredentialId" Label="Credential ID" />
+            <MudTextField @bind-Value="_currentLicense.CredentialUrl" Label="Credential URL" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseDialog">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveLicense" Disabled="@(!_isValid)">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<LicenseDto> _licenseList = new();
+    private bool _loading = true;
+
+    // Dialog state
+    private bool _dialogVisible;
+    private bool _isEditing;
+    private CreateLicenseDto _currentLicense = new();
+    private int _editingId;
+    private MudForm _form = null!;
+    private bool _isValid;
+
+    // Helper properties for MudDatePicker (nullable DateTime?)
+    private DateTime? _issueDate
+    {
+        get => _currentLicense.IssueDate == default ? null : _currentLicense.IssueDate;
+        set => _currentLicense.IssueDate = value ?? DateTime.Now;
+    }
+
+    private DateTime? _expirationDate
+    {
+        get => _currentLicense.ExpirationDate;
+        set => _currentLicense.ExpirationDate = value;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLicenses();
+    }
+
+    private async Task LoadLicenses()
+    {
+        _loading = true;
+        _licenseList = await ApiService.GetLicensesAsync();
+        _loading = false;
+    }
+
+    private void OpenCreateDialog()
+    {
+        _isEditing = false;
+        _currentLicense = new CreateLicenseDto { IssueDate = DateTime.Today };
+        _dialogVisible = true;
+    }
+
+    private void OpenEditDialog(LicenseDto license)
+    {
+        _isEditing = true;
+        _editingId = license.Id;
+        _currentLicense = new CreateLicenseDto
+        {
+            Name = license.Name,
+            IssuingOrganization = license.IssuingOrganization,
+            IssueDate = license.IssueDate,
+            ExpirationDate = license.ExpirationDate,
+            CredentialId = license.CredentialId,
+            CredentialUrl = license.CredentialUrl,
+            ContentLanguage = license.ContentLanguage
+        };
+        _dialogVisible = true;
+    }
+
+    private void CloseDialog()
+    {
+        _dialogVisible = false;
+    }
+
+    private async Task SaveLicense()
+    {
+        await _form.Validate();
+        if (!_isValid) return;
+
+        try
+        {
+            if (_isEditing)
+            {
+                await ApiService.UpdateLicenseAsync(_editingId, _currentLicense);
+                Snackbar.Add("License updated", Severity.Success);
+            }
+            else
+            {
+                await ApiService.CreateLicenseAsync(_currentLicense);
+                Snackbar.Add("License added", Severity.Success);
+            }
+
+            _dialogVisible = false;
+            await LoadLicenses();
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Error saving license", Severity.Error);
+        }
+    }
+
+    private async Task DeleteLicense(LicenseDto license)
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Delete License",
+            $"Are you sure you want to delete {license.Name}?",
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (result == true)
+        {
+            await ApiService.DeleteLicenseAsync(license.Id);
+            Snackbar.Add("License deleted", Severity.Success);
+            await LoadLicenses();
+        }
+    }
+}

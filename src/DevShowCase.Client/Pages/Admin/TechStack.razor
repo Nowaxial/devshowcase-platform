@@ -1,0 +1,185 @@
+@page "/admin/techstack"
+@using DevShowcase.Client.Services
+@using DevShowcase.Shared.DTOs.Portfolio
+@inject ApiService ApiService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
+    <div class="d-flex justify-space-between align-center mb-6">
+        <div>
+            <MudText Typo="Typo.h4" Class="font-weight-bold">Tech Stack</MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">Manage your core technologies and frameworks</MudText>
+        </div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateDialog">
+            Add Tech
+        </MudButton>
+    </div>
+
+    @if (_loading)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    }
+    else if (!_techList.Any())
+    {
+        <MudAlert Severity="Severity.Info">No technologies found. Start adding some!</MudAlert>
+    }
+    else
+    {
+        @foreach (var group in _techList.GroupBy(s => s.Category ?? "Other").OrderBy(g => g.Key))
+        {
+            <MudText Typo="Typo.h6" Class="mt-6 mb-2 text-uppercase font-weight-bold" Color="Color.Secondary">@group.Key</MudText>
+            <MudGrid>
+                @foreach (var tech in group)
+                {
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudPaper Elevation="2" Class="pa-4 d-flex align-center h-100">
+                            @if (!string.IsNullOrEmpty(tech.IconUrl))
+                            {
+                                <MudAvatar Image="@tech.IconUrl" Class="mr-3" />
+                            }
+                            else
+                            {
+                                <MudAvatar Color="Color.Secondary" Class="mr-3">@tech.Name[0]</MudAvatar>
+                            }
+                            <div class="flex-grow-1">
+                                <MudText Typo="Typo.subtitle1">@tech.Name</MudText>
+                                @if (tech.YearsOfExperience.HasValue)
+                                {
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@tech.YearsOfExperience.Value years exp.</MudText>
+                                }
+                            </div>
+                            <div class="d-flex flex-column">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => OpenEditDialog(tech))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteTech(tech))" />
+                            </div>
+                        </MudPaper>
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+    }
+</MudContainer>
+
+<!-- Dialog for Create/Edit -->
+<MudDialog @bind-IsVisible="_dialogVisible" Options="new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true }">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@(_isEditing ? "Edit Tech" : "Add Tech")</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_isValid">
+            <MudTextField @bind-Value="_currentTech.Name" Label="Tech Name" Required="true" RequiredError="Name is required" placeholder="e.g., .NET, React, Docker" />
+            
+            <MudSelect @bind-Value="_currentTech.Category" Label="Category" AnchorOrigin="Origin.BottomCenter">
+                <MudSelectItem Value="@("Language")">Language</MudSelectItem>
+                <MudSelectItem Value="@("Framework")">Framework</MudSelectItem>
+                <MudSelectItem Value="@("Database")">Database</MudSelectItem>
+                <MudSelectItem Value="@("Library")">Library</MudSelectItem>
+                <MudSelectItem Value="@("Tool")">Tool</MudSelectItem>
+                <MudSelectItem Value="@("Cloud")">Cloud</MudSelectItem>
+                <MudSelectItem Value="@("Other")">Other</MudSelectItem>
+            </MudSelect>
+
+            <MudNumericField @bind-Value="_currentTech.YearsOfExperience" Label="Years of Experience" Min="0" Step=".5M" />
+            <MudTextField @bind-Value="_currentTech.IconUrl" Label="Icon URL (Optional)" placeholder="https://..." />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseDialog">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveTech" Disabled="@(!_isValid)">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<TechStackDto> _techList = new();
+    private bool _loading = true;
+
+    // Dialog state
+    private bool _dialogVisible;
+    private bool _isEditing;
+    private CreateTechStackDto _currentTech = new();
+    private int _editingId;
+    private MudForm _form = null!;
+    private bool _isValid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTech();
+    }
+
+    private async Task LoadTech()
+    {
+        _loading = true;
+        _techList = await ApiService.GetTechStacksAsync();
+        _loading = false;
+    }
+
+    private void OpenCreateDialog()
+    {
+        _isEditing = false;
+        _currentTech = new CreateTechStackDto { Category = "Tool" };
+        _dialogVisible = true;
+    }
+
+    private void OpenEditDialog(TechStackDto tech)
+    {
+        _isEditing = true;
+        _editingId = tech.Id;
+        _currentTech = new CreateTechStackDto
+        {
+            Name = tech.Name,
+            Category = tech.Category,
+            IconUrl = tech.IconUrl,
+            YearsOfExperience = tech.YearsOfExperience,
+            ContentLanguage = tech.ContentLanguage
+        };
+        _dialogVisible = true;
+    }
+
+    private void CloseDialog()
+    {
+        _dialogVisible = false;
+    }
+
+    private async Task SaveTech()
+    {
+        await _form.Validate();
+        if (!_isValid) return;
+
+        try
+        {
+            if (_isEditing)
+            {
+                await ApiService.UpdateTechStackAsync(_editingId, _currentTech);
+                Snackbar.Add("Tech Stack updated", Severity.Success);
+            }
+            else
+            {
+                await ApiService.CreateTechStackAsync(_currentTech);
+                Snackbar.Add("Tech added", Severity.Success);
+            }
+
+            _dialogVisible = false;
+            await LoadTech();
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Error saving tech stack", Severity.Error);
+        }
+    }
+
+    private async Task DeleteTech(TechStackDto tech)
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Delete Tech",
+            $"Are you sure you want to delete {tech.Name}?",
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (result == true)
+        {
+            await ApiService.DeleteTechStackAsync(tech.Id);
+            Snackbar.Add("Tech deleted", Severity.Success);
+            await LoadTech();
+        }
+    }
+}

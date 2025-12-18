@@ -1,0 +1,121 @@
+@page "/admin/settings"
+@using DevShowcase.Client.Services
+@using DevShowcase.Shared.DTOs.Profile
+@inject ApiService ApiService
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-8">
+    <MudText Typo="Typo.h4" Class="font-weight-bold mb-6">Settings</MudText>
+
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+        <!-- AI Settings -->
+        <MudTabPanel Text="AI Settings" Icon="@Icons.Material.Filled.AutoAwesome">
+            <MudText Typo="Typo.h6" Class="mb-4">AI Configuration</MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary mb-6">
+                Configure your AI assistant for content generation and text re-writing.
+            </MudText>
+
+            @if (_loadingAI)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+            }
+            else
+            {
+                <MudSwitch T="bool" @bind-Checked="_aiSettings.EnableAIRewriting" Label="Enable AI Text Re-writing" Color="Color.Primary" />
+                
+                <MudSelect T="string" @bind-Value="_aiSettings.PreferredTone" Label="Preferred Tone" AnchorOrigin="Origin.BottomCenter" Class="mt-4">
+                    <MudSelectItem Value="@("Professional")">Professional</MudSelectItem>
+                    <MudSelectItem Value="@("Creative")">Creative</MudSelectItem>
+                    <MudSelectItem Value="@("Minimalist")">Minimalist</MudSelectItem>
+                    <MudSelectItem Value="@("Action-Oriented")">Action-Oriented</MudSelectItem>
+                </MudSelect>
+
+                <MudTextField @bind-Value="_aiSettings.CustomInstructions" Label="Custom Instructions for AI" 
+                              HelperText="e.g., 'Make my profile sound like a senior architect with 10 years of experience'" 
+                              Lines="4" Class="mt-4" />
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAISettings" Class="mt-6">
+                    Save AI Settings
+                </MudButton>
+            }
+        </MudTabPanel>
+
+        <!-- User Preferences -->
+        <MudTabPanel Text="Preferences" Icon="@Icons.Material.Filled.Settings">
+            <MudText Typo="Typo.h6" Class="mb-4">Public Portfolio Preferences</MudText>
+            
+            @if (_loadingPrefs)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+            }
+            else
+            {
+                <MudStack Spacing="4">
+                    <MudSwitch T="bool" @bind-Checked="_userPrefs.ShowEmailPublicly" Label="Show Email Publicly on Portfolio" Color="Color.Primary" />
+                    <MudSwitch T="bool" @bind-Checked="_userPrefs.ShowResumeDownload" Label="Enable Resume/CV Download" Color="Color.Primary" />
+                    
+                    <MudTextField @bind-Value="_userPrefs.GoogleAnalyticsId" Label="Google Analytics ID" 
+                                  Placeholder="G-XXXXXXXXXX" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                </MudStack>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SavePreferences" Class="mt-6">
+                    Save Preferences
+                </MudButton>
+            }
+        </MudTabPanel>
+    </MudTabs>
+</MudContainer>
+
+@code {
+    private UserAISettingsDto _aiSettings = new();
+    private UserPreferenceDto _userPrefs = new();
+    private bool _loadingAI = true;
+    private bool _loadingPrefs = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(LoadAISettings(), LoadPreferences());
+    }
+
+    private async Task LoadAISettings()
+    {
+        _loadingAI = true;
+        var settings = await ApiService.GetAISettingsAsync();
+        if (settings != null) _aiSettings = settings;
+        _loadingAI = false;
+    }
+
+    private async Task LoadPreferences()
+    {
+        _loadingPrefs = true;
+        var prefs = await ApiService.GetPreferencesAsync();
+        if (prefs != null) _userPrefs = prefs;
+        _loadingPrefs = false;
+    }
+
+    private async Task SaveAISettings()
+    {
+        try
+        {
+            await ApiService.UpdateAISettingsAsync(_aiSettings);
+            Snackbar.Add("AI Settings saved", Severity.Success);
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Error saving AI settings", Severity.Error);
+        }
+    }
+
+    private async Task SavePreferences()
+    {
+        try
+        {
+            await ApiService.UpdatePreferencesAsync(_userPrefs);
+            Snackbar.Add("Preferences saved", Severity.Success);
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Error saving preferences", Severity.Error);
+        }
+    }
+}

@@ -1,0 +1,173 @@
+@page "/admin/competencies"
+@using DevShowcase.Client.Services
+@using DevShowcase.Shared.DTOs.Portfolio
+@inject ApiService ApiService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
+    <div class="d-flex justify-space-between align-center mb-6">
+        <div>
+            <MudText Typo="Typo.h4" Class="font-weight-bold">Competencies</MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">Core competencies and soft skills</MudText>
+        </div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateDialog">
+            Add Competency
+        </MudButton>
+    </div>
+
+    @if (_loading)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    }
+    else if (!_competencyList.Any())
+    {
+        <MudAlert Severity="Severity.Info">No competencies found. Start adding some!</MudAlert>
+    }
+    else
+    {
+        @foreach (var group in _competencyList.GroupBy(s => s.Category ?? "Other").OrderBy(g => g.Key))
+        {
+            <MudText Typo="Typo.h6" Class="mt-6 mb-2 text-uppercase font-weight-bold" Color="Color.Secondary">@group.Key</MudText>
+            <MudGrid>
+                @foreach (var comp in group)
+                {
+                    <MudItem xs="12" md="6">
+                        <MudCard Elevation="2" Class="pa-4 h-100">
+                            <MudCardHeader>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h6">@comp.Name</MudText>
+                                </CardHeaderContent>
+                                <CardHeaderActions>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="@(() => OpenEditDialog(comp))" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteCompetency(comp))" />
+                                </CardHeaderActions>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                <MudText Typo="Typo.body2">@comp.Description</MudText>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+    }
+</MudContainer>
+
+<!-- Dialog for Create/Edit -->
+<MudDialog @bind-IsVisible="_dialogVisible" Options="new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true }">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@(_isEditing ? "Edit Competency" : "Add Competency")</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_isValid">
+            <MudTextField @bind-Value="_currentComp.Name" Label="Competency Name" Required="true" RequiredError="Name is required" placeholder="e.g., Agile Methodologies, System Design" />
+            
+            <MudSelect @bind-Value="_currentComp.Category" Label="Category" AnchorOrigin="Origin.BottomCenter">
+                <MudSelectItem Value="@("Methodology")">Methodology</MudSelectItem>
+                <MudSelectItem Value="@("Soft Skills")">Soft Skills</MudSelectItem>
+                <MudSelectItem Value="@("Domain Knowledge")">Domain Knowledge</MudSelectItem>
+                <MudSelectItem Value="@("Other")">Other</MudSelectItem>
+            </MudSelect>
+
+            <MudTextField @bind-Value="_currentComp.Description" Label="Description" Lines="3" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseDialog">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveCompetency" Disabled="@(!_isValid)">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<CompetencyDto> _competencyList = new();
+    private bool _loading = true;
+
+    // Dialog state
+    private bool _dialogVisible;
+    private bool _isEditing;
+    private CreateCompetencyDto _currentComp = new();
+    private int _editingId;
+    private MudForm _form = null!;
+    private bool _isValid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCompetencies();
+    }
+
+    private async Task LoadCompetencies()
+    {
+        _loading = true;
+        _competencyList = await ApiService.GetCompetenciesAsync();
+        _loading = false;
+    }
+
+    private void OpenCreateDialog()
+    {
+        _isEditing = false;
+        _currentComp = new CreateCompetencyDto { Category = "Domain Knowledge" };
+        _dialogVisible = true;
+    }
+
+    private void OpenEditDialog(CompetencyDto comp)
+    {
+        _isEditing = true;
+        _editingId = comp.Id;
+        _currentComp = new CreateCompetencyDto
+        {
+            Name = comp.Name,
+            Category = comp.Category,
+            Description = comp.Description,
+            ContentLanguage = comp.ContentLanguage
+        };
+        _dialogVisible = true;
+    }
+
+    private void CloseDialog()
+    {
+        _dialogVisible = false;
+    }
+
+    private async Task SaveCompetency()
+    {
+        await _form.Validate();
+        if (!_isValid) return;
+
+        try
+        {
+            if (_isEditing)
+            {
+                await ApiService.UpdateCompetencyAsync(_editingId, _currentComp);
+                Snackbar.Add("Competency updated", Severity.Success);
+            }
+            else
+            {
+                await ApiService.CreateCompetencyAsync(_currentComp);
+                Snackbar.Add("Competency added", Severity.Success);
+            }
+
+            _dialogVisible = false;
+            await LoadCompetencies();
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Error saving competency", Severity.Error);
+        }
+    }
+
+    private async Task DeleteCompetency(CompetencyDto comp)
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Delete Competency",
+            $"Are you sure you want to delete {comp.Name}?",
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (result == true)
+        {
+            await ApiService.DeleteCompetencyAsync(comp.Id);
+            Snackbar.Add("Competency deleted", Severity.Success);
+            await LoadCompetencies();
+        }
+    }
+}

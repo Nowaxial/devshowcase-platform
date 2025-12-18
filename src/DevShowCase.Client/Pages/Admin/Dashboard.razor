@@ -1,113 +1,140 @@
 @page "/admin/dashboard"
+@using DevShowcase.Client.Shared
 @using Microsoft.AspNetCore.Authorization
+@using DevShowCase.Client.Shared
+@using DevShowcase.Client.Services
+@using DevShowcase.Shared.DTOs.Admin
 @attribute [Authorize]
+@inject ApiService ApiService
 
 <PageTitle>Admin Dashboard</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
-    <MudText Typo="Typo.h3" GutterBottom="true">Dashboard</MudText>
-    <MudText Typo="Typo.subtitle1" Class="mb-8">Welcome back! Manage your portfolio content here.</MudText>
+    <div class="d-flex justify-space-between align-center mb-8">
+        <div>
+            <MudText Typo="Typo.h3" Class="font-weight-bold">Dashboard</MudText>
+            <MudText Typo="Typo.subtitle1" Class="mud-text-secondary">Welcome back! Here's an overview of your portfolio.</MudText>
+        </div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@LucideIcons.Sun" IconClass="lucide-icon" Href="/" Target="_blank">
+            View Live Site
+        </MudButton>
+    </div>
 
-    <MudGrid>
-        <!-- Experience -->
-        <MudItem xs="12" sm="6" md="4">
-            <MudCard Elevation="3" Class="h-100 hover-card">
-                <MudCardHeader>
-                    <CardHeaderAvatar>
-                        <MudIcon Icon="@Icons.Material.Filled.Work" Size="Size.Large" Color="Color.Primary" />
-                    </CardHeaderAvatar>
-                    <CardHeaderContent>
-                        <MudText Typo="Typo.h6">Experience</MudText>
-                    </CardHeaderContent>
-                </MudCardHeader>
-                <MudCardContent>
-                    <MudText Typo="Typo.body2">Manage your work history and positions.</MudText>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Href="/admin/experience" Variant="Variant.Text" Color="Color.Primary">Manage</MudButton>
-                </MudCardActions>
-            </MudCard>
-        </MudItem>
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-6" />
+    }
+    else
+    {
+        <!-- Key Stats -->
+        <MudGrid Class="mb-8">
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Elevation="2" Class="pa-4 d-flex align-center h-100 border-l-4 border-solid mud-border-primary">
+                    <MudIcon Icon="@LucideIcons.Briefcase" IconClass="lucide-icon mr-4" Size="Size.Large" Color="Color.Primary" />
+                    <div>
+                        <MudText Typo="Typo.h4">@_stats.TotalExperience</MudText>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary">Work Experiences</MudText>
+                    </div>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Elevation="2" Class="pa-4 d-flex align-center h-100 border-l-4 border-solid mud-border-secondary">
+                    <MudIcon Icon="@LucideIcons.Code" IconClass="lucide-icon mr-4" Size="Size.Large" Color="Color.Secondary" />
+                    <div>
+                        <MudText Typo="Typo.h4">@_stats.TotalProjects</MudText>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary">Projects Built</MudText>
+                    </div>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Elevation="2" Class="pa-4 d-flex align-center h-100 border-l-4 border-solid mud-border-info">
+                    <MudIcon Icon="@LucideIcons.Wrench" IconClass="lucide-icon mr-4" Size="Size.Large" Color="Color.Info" />
+                    <div>
+                        <MudText Typo="Typo.h4">@_stats.TotalSkills</MudText>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary">Technical Skills</MudText>
+                    </div>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Elevation="@(_stats.UnreadMessagesCount > 0 ? 4 : 2)" Class="@($"pa-4 d-flex align-center h-100 border-l-4 border-solid {(_stats.UnreadMessagesCount > 0 ? "mud-border-warning" : "mud-border-success")}")">
+                    <MudIcon Icon="@LucideIcons.MessageSquare" IconClass="lucide-icon mr-4" Size="Size.Large" Color="@(_stats.UnreadMessagesCount > 0 ? Color.Warning : Color.Success)" />
+                    <div>
+                        <MudText Typo="Typo.h4">@_stats.UnreadMessagesCount</MudText>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary">Unread Messages</MudText>
+                    </div>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
 
-        <!-- Projects -->
-        <MudItem xs="12" sm="6" md="4">
-            <MudCard Elevation="3" Class="h-100 hover-card">
-                <MudCardHeader>
-                    <CardHeaderAvatar>
-                        <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Large" Color="Color.Secondary" />
-                    </CardHeaderAvatar>
-                    <CardHeaderContent>
-                        <MudText Typo="Typo.h6">Projects</MudText>
-                    </CardHeaderContent>
-                </MudCardHeader>
-                <MudCardContent>
-                    <MudText Typo="Typo.body2">Showcase your coding projects and GitHub repos.</MudText>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Href="/admin/projects" Variant="Variant.Text" Color="Color.Secondary">Manage</MudButton>
-                </MudCardActions>
-            </MudCard>
-        </MudItem>
-
-        <!-- Profile -->
-        <MudItem xs="12" sm="6" md="4">
-            <MudCard Elevation="3" Class="h-100 hover-card">
-                <MudCardHeader>
-                    <CardHeaderAvatar>
-                        <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Large" Color="Color.Info" />
-                    </CardHeaderAvatar>
-                    <CardHeaderContent>
-                        <MudText Typo="Typo.h6">Profile</MudText>
-                    </CardHeaderContent>
-                </MudCardHeader>
-                <MudCardContent>
-                    <MudText Typo="Typo.body2">Update your personal info and bio.</MudText>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Href="/admin/profile" Variant="Variant.Text" Color="Color.Info">Edit Profile</MudButton>
-                </MudCardActions>
-            </MudCard>
-        </MudItem>
-
-        <!-- Education -->
-        <MudItem xs="12" sm="6" md="4">
-            <MudCard Elevation="3" Class="h-100 hover-card">
-                <MudCardHeader>
-                    <CardHeaderAvatar>
-                        <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Large" Color="Color.Info" />
-                    </CardHeaderAvatar>
-                    <CardHeaderContent>
-                        <MudText Typo="Typo.h6">Education</MudText>
-                    </CardHeaderContent>
-                </MudCardHeader>
-                <MudCardContent>
-                    <MudText Typo="Typo.body2">Update your education.</MudText>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Href="/admin/Education" Variant="Variant.Text" Color="Color.Info">Edit Profile</MudButton>
-                </MudCardActions>
-            </MudCard>
-        </MudItem>
-
-
-        <!-- Skill -->
-        <MudItem xs="12" sm="6" md="4">
-            <MudCard Elevation="3" Class="h-100 hover-card">
-                <MudCardHeader>
-                    <CardHeaderAvatar>
-                        <MudIcon Icon="@Icons.Material.Filled.Build" Size="Size.Large" Color="Color.Info" />
-                    </CardHeaderAvatar>
-                    <CardHeaderContent>
-                        <MudText Typo="Typo.h6">Skill</MudText>
-                    </CardHeaderContent>
-                </MudCardHeader>
-                <MudCardContent>
-                    <MudText Typo="Typo.body2">Update your skills.</MudText>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Href="/admin/Skills" Variant="Variant.Text" Color="Color.Info">Edit Profile</MudButton>
-                </MudCardActions>
-            </MudCard>
-        </MudItem>
-    </MudGrid>
+        <MudText Typo="Typo.h5" Class="mb-4 font-weight-bold">Quick Actions</MudText>
+        <MudGrid>
+            @foreach (var action in _quickActions)
+            {
+                <MudItem xs="12" sm="6" md="4">
+                    <MudCard Elevation="2" Class="h-100 hover-card mud-border-solid border-1">
+                        <MudCardHeader>
+                            <CardHeaderAvatar>
+                                <MudIcon Icon="@action.Icon" IconClass="lucide-icon" Size="Size.Medium" Color="@action.Color" />
+                            </CardHeaderAvatar>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.subtitle1" Class="font-weight-bold">@action.Title</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudText Typo="Typo.body2" Class="mud-text-secondary">@action.Description</MudText>
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudButton Href="@action.Link" Variant="Variant.Text" Color="@action.Color" EndIcon="@Icons.Material.Filled.ArrowForward">Manage</MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    }
 </MudContainer>
+
+<style>
+    .hover-card:hover { border-color: var(--mud-palette-primary) !important; cursor: pointer; }
+    .border-l-4 { border-left-width: 4px !important; }
+</style>
+
+@code {
+    private DashboardStatsDto _stats = new();
+    private bool _loading = true;
+
+    private List<QuickAction> _quickActions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        try
+        {
+            _stats = await ApiService.GetDashboardStatsAsync();
+            InitializeActions();
+        }
+        catch (Exception)
+        {
+            // Error handling could be added here
+        }
+        _loading = false;
+    }
+
+    private void InitializeActions()
+    {
+        _quickActions = new List<QuickAction>
+        {
+            new("Experiences", "Manage your work history.", "/admin/experience", LucideIcons.Briefcase, Color.Primary),
+            new("Projects", "Showcase your portfolio work.", "/admin/projects", LucideIcons.Code, Color.Secondary),
+            new("Education", "Academic background.", "/admin/education", LucideIcons.GraduationCap, Color.Info),
+            new("Skills", "Technical and soft skills.", "/admin/skills", LucideIcons.Wrench, Color.Success),
+            new("Certificates", "Licenses and awards.", "/admin/licenses", LucideIcons.Award, Color.Warning),
+            new("Languages", "Multilingual capabilities.", "/admin/languages", LucideIcons.Languages, Color.Tertiary),
+            new("Tech Stack", "Tools and frameworks.", "/admin/techstack", LucideIcons.Layers, Color.Primary),
+            new("Competencies", "Core focus areas.", "/admin/competencies", LucideIcons.Sparkles, Color.Secondary),
+            new("Settings", "AI and App preferences.", "/admin/settings", LucideIcons.Settings, Color.Default)
+        };
+    }
+
+    private record QuickAction(string Title, string Description, string Link, string Icon, Color Color);
+}
+

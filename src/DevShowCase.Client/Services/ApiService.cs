@@ -1,11 +1,15 @@
 ﻿using DevShowcase.Shared.DTOs.Portfolio;
 using DevShowcase.Shared.DTOs.Profile;
 using DevShowcase.Shared.DTOs.Public;
+using DevShowcase.Shared.DTOs.Admin;
 using System.Net.Http.Json;
 namespace DevShowcase.Client.Services;
 
 public class ApiService(HttpClient httpClient)
 {
+    // Dashboard
+    public async Task<DashboardStatsDto> GetDashboardStatsAsync() => await httpClient.GetFromJsonAsync<DashboardStatsDto>("api/dashboard/stats") ?? new();
+
     // Experience
     public async Task<List<ExperienceDto>> GetExperiencesAsync()
     {
@@ -155,4 +159,8 @@ public class ApiService(HttpClient httpClient)
     public async Task UpdateAISettingsAsync(UserAISettingsDto dto) { (await httpClient.PutAsJsonAsync("api/settings/ai", dto)).EnsureSuccessStatusCode(); }
     public async Task<UserPreferenceDto?> GetPreferencesAsync() => await httpClient.GetFromJsonAsync<UserPreferenceDto>("api/settings/preferences");
     public async Task UpdatePreferencesAsync(UserPreferenceDto dto) { (await httpClient.PutAsJsonAsync("api/settings/preferences", dto)).EnsureSuccessStatusCode(); }
+
+    // Contact Messages
+    public async Task<List<AdminContactMessageDto>> GetContactMessagesAsync() => await httpClient.GetFromJsonAsync<List<AdminContactMessageDto>>("api/contact") ?? new();
+    public async Task MarkContactMessageAsReadAsync(int id) { (await httpClient.PatchAsync($"api/contact/{id}/read", null)).EnsureSuccessStatusCode(); }
 }

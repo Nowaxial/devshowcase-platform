@@ -1,0 +1,118 @@
+@page "/admin/messages"
+@using DevShowcase.Client.Services
+@using DevShowcase.Shared.DTOs.Public
+@inject ApiService ApiService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
+    <div class="d-flex justify-space-between align-center mb-6">
+        <div>
+            <MudText Typo="Typo.h4" Class="font-weight-bold">Messages</MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">Review inquiries from your portfolio visitors</MudText>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    }
+    else if (!_messageList.Any())
+    {
+        <MudAlert Severity="Severity.Info">No messages found.</MudAlert>
+    }
+    else
+    {
+        <MudTable Items="@_messageList" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="2" OnRowClick="@((TableRowClickEventArgs<AdminContactMessageDto> args) => OpenMessage(args.Item))" T="AdminContactMessageDto">
+            <HeaderContent>
+                <MudTh>Status</MudTh>
+                <MudTh>From</MudTh>
+                <MudTh>Email</MudTh>
+                <MudTh>Date</MudTh>
+                <MudTh>Action</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Status">
+                    @if (context.IsRead)
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.MarkEmailRead" Color="Color.Default" Title="Read" />
+                    }
+                    else
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.MarkEmailUnread" Color="Color.Primary" Title="Unread" />
+                    }
+                </MudTd>
+                <MudTd DataLabel="From">@context.Name</MudTd>
+                <MudTd DataLabel="Email">@context.Email</MudTd>
+                <MudTd DataLabel="Date">@context.SentDate.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                <MudTd>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => OpenMessage(context))">View</MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudContainer>
+
+<MudDialog @bind-IsVisible="_dialogVisible" Options="new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true }">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Message from @_selectedMessage?.Name</MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (_selectedMessage != null)
+        {
+            <div class="mb-4">
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">Sent: @_selectedMessage.SentDate.ToString("f")</MudText>
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">Email: @_selectedMessage.Email</MudText>
+            </div>
+            <MudDivider Class="mb-4" />
+            <MudText Typo="Typo.body1" Style="white-space: pre-wrap;">@_selectedMessage.Message</MudText>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseMessage">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<AdminContactMessageDto> _messageList = new();
+    private bool _loading = true;
+    private bool _dialogVisible;
+    private AdminContactMessageDto? _selectedMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMessages();
+    }
+
+    private async Task LoadMessages()
+    {
+        _loading = true;
+        _messageList = await ApiService.GetContactMessagesAsync();
+        _loading = false;
+    }
+
+    private async Task OpenMessage(AdminContactMessageDto message)
+    {
+        _selectedMessage = message;
+        _dialogVisible = true;
+
+        if (!message.IsRead)
+        {
+            try
+            {
+                await ApiService.MarkContactMessageAsReadAsync(message.Id);
+                message.IsRead = true;
+            }
+            catch (Exception)
+            {
+                // Ignore silent fail for marking as read
+            }
+        }
+    }
+
+    private void CloseMessage()
+    {
+        _dialogVisible = false;
+        _selectedMessage = null;
+    }
+}
