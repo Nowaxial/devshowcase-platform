@@ -1,22 +1,19 @@
-@page "/portfolio/{username}"
+@page "/{username}"
 @using DevShowcase.Shared.DTOs.Public
 @using DevShowcase.Client.Services
-@inject ApiService ApiService
+@implements IDisposable
 
 <PageTitle>@(Portfolio?.FirstName + " " + Portfolio?.LastName ?? "Developer Portfolio")</PageTitle>
 
-@if (_loading)
+@if (Portfolio == null)
 {
-    <MudContainer MaxWidth="MaxWidth.Small" Class="d-flex justify-center align-center" Style="height: 80vh;">
-        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
-    </MudContainer>
-}
-else if (Portfolio == null)
-{
-    <MudContainer MaxWidth="MaxWidth.Small" Class="mt-16 text-center">
-        <MudText Typo="Typo.h4">Portfolio Not Found</MudText>
-        <MudText Typo="Typo.body1" Class="mt-2">The requested user portfolio could not be found.</MudText>
-    </MudContainer>
+    @if (!PortfolioState.IsLoading)
+    {
+        <MudContainer MaxWidth="MaxWidth.Small" Class="mt-16 text-center">
+            <MudText Typo="Typo.h4">Portfolio Not Found</MudText>
+            <MudText Typo="Typo.body1" Class="mt-2">The requested user portfolio could not be found.</MudText>
+        </MudContainer>
+    }
 }
 else
 {
@@ -96,7 +93,6 @@ else
         {
              <div class="d-flex justify-space-between align-center mb-6">
                 <MudText Typo="Typo.h5" Class="font-weight-bold">Recent Projects</MudText>
-                @* <MudButton EndIcon="@Icons.Material.Filled.ArrowForward" Href="projects" Variant="Variant.Text" Color="Color.Primary">View All</MudButton> *@
             </div>
             
             <MudGrid>
@@ -133,15 +129,17 @@ else
 
 @code {
     [Parameter] public string username { get; set; } = "default";
+    [Inject] PortfolioStateService PortfolioState { get; set; } = null!;
     
-    private PortfolioDto? Portfolio { get; set; }
-    private bool _loading = true;
+    private PortfolioDto? Portfolio => PortfolioState.CurrentPortfolio;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        _loading = true;
-        // Fetch specific user portfolio
-        Portfolio = await ApiService.GetPortfolioAsync(username);
-        _loading = false;
+        PortfolioState.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        PortfolioState.OnChange -= StateHasChanged;
     }
 }

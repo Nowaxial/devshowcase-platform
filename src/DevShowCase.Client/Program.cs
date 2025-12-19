@@ -26,6 +26,8 @@ builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredServ
 
 // 3. App Services
 builder.Services.AddScoped<ApiService>();
+builder.Services.AddScoped<ThemeService>();
+builder.Services.AddScoped<PortfolioStateService>();
 builder.Services.AddMudServices();
 
 await builder.Build().RunAsync();

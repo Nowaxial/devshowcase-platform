@@ -8,14 +8,28 @@
 <MudSnackbarProvider />
 
 <style>
-    /* Public Portfolio Layout Styles */
+    /* Public Portfolio Layout Styles - Using Theme Variables */
+    :root {
+        --mud-palette-primary: var(--p-primary);
+        --mud-palette-surface: var(--p-surface);
+        --mud-palette-background: var(--p-bg);
+        --mud-palette-text-primary: var(--p-text);
+        --mud-palette-text-secondary: var(--p-text-secondary);
+        --mud-palette-appbar-background: var(--p-surface);
+        --mud-palette-appbar-text: var(--p-text);
+        --mud-typography-default-family: var(--p-font);
+    }
+
     .portfolio-header {
         backdrop-filter: blur(10px);
-        background-color: rgba(255, 255, 255, 0.7);
+        background-color: var(--p-surface); /* Semi-transparent handled in creative theme */
+        border-bottom: 1px solid var(--mud-palette-divider);
     }
     
-    body.dark .portfolio-header {
-        background-color: rgba(30, 30, 30, 0.7);
+    body {
+        background-color: var(--p-bg) !important;
+        color: var(--p-text) !important;
+        font-family: var(--p-font) !important;
     }
 </style>
 
@@ -29,17 +43,30 @@
 
         <!-- Navigation -->
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
-            <MudLink Href="" Color="Color.Inherit" Class="mx-2">CV</MudLink>
-            <MudLink Href="projects" Color="Color.Inherit" Class="mx-2">Projects</MudLink>
+            <MudLink Href="@($"/{Username}")" Color="Color.Inherit" Class="mx-2">Home</MudLink>
+            <MudLink Href="@($"/{Username}/cv")" Color="Color.Inherit" Class="mx-2">CV</MudLink>
+            <MudLink Href="@($"/{Username}/about")" Color="Color.Inherit" Class="mx-2">About</MudLink>
+            <MudLink Href="@($"/{Username}/projects")" Color="Color.Inherit" Class="mx-2">Projects</MudLink>
+            <MudLink Href="@($"/{Username}/contact")" Color="Color.Inherit" Class="mx-2">Contact</MudLink>
         </MudHidden>
+        <MudMenu Icon="@LucideIcons.Menu" Color="Color.Inherit" Class="d-flex d-md-none" AnchorOrigin="Origin.BottomRight">
+            <MudMenuItem href="@($"/{Username}")">Home</MudMenuItem>
+            <MudMenuItem href="@($"/{Username}/cv")">CV</MudMenuItem>
+            <MudMenuItem href="@($"/{Username}/about")">About</MudMenuItem>
+            <MudMenuItem href="@($"/{Username}/projects")">Projects</MudMenuItem>
+            <MudMenuItem href="@($"/{Username}/contact")">Contact</MudMenuItem>
+        </MudMenu>
+
+        <MudDivider Vertical="true" FlexItem="true" Class="mx-4 my-3 opacity-10" />
 
         <!-- Dark Mode Toggle -->
         <MudTooltip Text="@(_isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode")">
             <MudIconButton OnClick="@((e) => OnSystemDarkModeChanged(!_isDarkMode))"
                            Icon="@(_isDarkMode ? LucideIcons.Sun : LucideIcons.Moon)"
-                           Class="ml-2" 
+                           Class="ml-1" 
                            Color="Color.Inherit" />
         </MudTooltip>
+
 
         <!-- Admin Link (Only if Authorized) -->
         <AuthorizeView>
@@ -53,14 +80,65 @@
     </MudAppBar>
 
     <MudMainContent>
-        @Body
+        @if (PortfolioState.IsLoading)
+        {
+            <MudContainer MaxWidth="MaxWidth.Small" Class="d-flex justify-center align-center" Style="height: 80vh;">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+            </MudContainer>
+        }
+        else
+        {
+            @Body
+        }
     </MudMainContent>
 </MudLayout>
 
 @code {
     [Inject] NavigationManager Navigation { get; set; } = null!;
+    [Inject] ApiService ApiService { get; set; } = null!;
+    [Inject] PortfolioStateService PortfolioState { get; set; } = null!;
+    [Inject] ThemeService ThemeService { get; set; } = null!;
+
+    private string Username { get; set; } = "default";
     private bool _isDarkMode = true;
     private MudThemeProvider _mudThemeProvider = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ResolveUsername();
+        await LoadPortfolioData();
+        
+        Navigation.LocationChanged += async (s, e) => {
+            var oldUser = Username;
+            ResolveUsername();
+            if (oldUser != Username)
+            {
+                await LoadPortfolioData();
+            }
+            StateHasChanged();
+        };
+    }
+
+    private async Task LoadPortfolioData()
+    {
+        if (string.IsNullOrEmpty(Username) || Username == "default") return;
+        
+        await PortfolioState.LoadPortfolioOnceAsync(Username, ApiService);
+        if (PortfolioState.CurrentPortfolio != null)
+        {
+            await ThemeService.ApplyTheme(PortfolioState.CurrentPortfolio.ThemeCssFile);
+        }
+    }
+
+    private void ResolveUsername()
+    {
+        var relative = Navigation.ToBaseRelativePath(Navigation.Uri);
+        var segments = relative.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length > 0)
+        {
+            Username = segments[0];
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

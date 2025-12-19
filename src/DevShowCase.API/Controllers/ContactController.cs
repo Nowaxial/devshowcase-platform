@@ -19,15 +19,19 @@ public class ContactController : ControllerBase
         _context = context;
     }
 
-    // Public: Send a message
-    [HttpPost]
-    public async Task<IActionResult> SendMessage(ContactMessageDto dto)
+    // Public: Send a message to a specific user
+    [HttpPost("{username}")]
+    public async Task<IActionResult> SendMessage(string username, ContactMessageDto dto)
     {
-        // For now we just save to DB. Later we can add Email service.
+        var targetUser = await _context.Users.FirstOrDefaultAsync(u => u.UserName == username || u.Email == username);
+        if (targetUser == null) return NotFound("User not found");
+
         var message = new ContactMessage
         {
+            UserId = targetUser.Id,
             Name = dto.Name,
             Email = dto.Email,
+            Subject = dto.Subject,
             Message = dto.Message,
             SentDate = DateTime.UtcNow,
             IsRead = false
@@ -44,9 +48,11 @@ public class ContactController : ControllerBase
     [Authorize]
     public async Task<ActionResult<IEnumerable<AdminContactMessageDto>>> GetMessages()
     {
-        // In a multi-tenant app, messages should likely be linked to a user.
-        // For now, this is a simple global list or we could filter by recipient if we add that field.
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized();
+
         var messages = await _context.ContactMessages
+            .Where(m => m.UserId == userId)
             .OrderByDescending(m => m.SentDate)
             .ToListAsync();
 
@@ -55,6 +61,7 @@ public class ContactController : ControllerBase
             Id = m.Id,
             Name = m.Name,
             Email = m.Email,
+            Subject = m.Subject,
             Message = m.Message,
             SentDate = m.SentDate,
             IsRead = m.IsRead

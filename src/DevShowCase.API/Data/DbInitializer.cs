@@ -228,8 +228,42 @@ public static class DbInitializer
                             Location = "Gothenburg, Sweden"
                         }
                     );
+
+                    // Add Languages
+                    context.Languages.AddRange(
+                        new Language { UserId = user.Id, Name = "Swedish", ProficiencyLevel = "Native" },
+                        new Language { UserId = user.Id, Name = "English", ProficiencyLevel = "Professional" }
+                    );
+
+                    // Add TechStacks
+                    context.TechStacks.AddRange(
+                        new TechStack { UserId = user.Id, Name = ".NET 9", Category = "Backend" },
+                        new TechStack { UserId = user.Id, Name = "Blazor WASM", Category = "Frontend" },
+                        new TechStack { UserId = user.Id, Name = "Entity Framework Core", Category = "Database" },
+                        new TechStack { UserId = user.Id, Name = "Azure", Category = "Cloud" }
+                    );
+
+                    // Add Competencies
+                    context.Competencies.AddRange(
+                        new Competency { UserId = user.Id, Name = "Agile / Scrum", Category = "Methodology" },
+                        new Competency { UserId = user.Id, Name = "System Architecture", Category = "Technical" },
+                        new Competency { UserId = user.Id, Name = "Unit Testing", Category = "Technical" }
+                    );
+
+                    // Add Licenses
+                    context.Licenses.AddRange(
+                        new License 
+                        { 
+                            UserId = user.Id, 
+                            Name = "Azure AI Fundamentals", 
+                            Issuer = "Microsoft", 
+                            IssueDate = new DateTime(2024, 5, 12),
+                            CredentialId = "AI-900"
+                        }
+                    );
                     
                     await context.SaveChangesAsync();
+
                 }
             }
         }

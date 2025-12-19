@@ -1,6 +1,58 @@
 html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: 'Inter', sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
+
+:root {
+    /* Default / Platform Theme */
+    --p-primary: #594ae2;
+    --p-bg: #ffffff;
+    --p-surface: #ffffff;
+    --p-text: #2d3436;
+    --p-text-secondary: #636e72;
+    --p-font: 'Inter', sans-serif;
+}
+
+/* Minimalist Theme */
+[data-theme='theme-minimal.css'] {
+    --p-primary: #2d3436;
+    --p-bg: #ffffff;
+    --p-surface: #f9f9f9;
+    --p-text: #2d3436;
+    --p-text-secondary: #636e72;
+    --p-font: 'Inter', sans-serif;
+}
+
+/* Creative Theme */
+[data-theme='theme-frontend.css'] {
+    --p-primary: #6c5ce7;
+    --p-bg: #f8f9fa;
+    --p-surface: rgba(255, 255, 255, 0.8);
+    --p-text: #2d3436;
+    --p-text-secondary: #636e72;
+    --p-font: 'Outfit', sans-serif;
+}
+
+/* Terminal Theme */
+[data-theme='theme-backend.css'] {
+    --p-primary: #00ff00;
+    --p-bg: #0d0d0d;
+    --p-surface: #1a1a1a;
+    --p-text: #00ff00;
+    --p-text-secondary: #00cc00;
+    --p-font: 'Fira Code', monospace;
+}
+
+/* Fullstack Modern Theme */
+[data-theme='theme-fullstack.css'] {
+    --p-primary: #0984e3;
+    --p-bg: #fdfdfd;
+    --p-surface: #ffffff;
+    --p-text: #2d3436;
+    --p-text-secondary: #636e72;
+    --p-font: 'Inter', sans-serif;
+}
+
 
 h1:focus {
     outline: none;

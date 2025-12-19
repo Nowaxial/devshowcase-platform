@@ -1,0 +1,141 @@
+@page "/{username}/about"
+@layout PortfolioLayout
+@using DevShowcase.Shared.DTOs.Public
+@using DevShowcase.Client.Services
+@implements IDisposable
+
+<PageTitle>About @(Portfolio?.FirstName ?? "") - DevShowcase</PageTitle>
+
+@if (Portfolio == null)
+{
+    @if (!PortfolioState.IsLoading)
+    {
+        <MudContainer MaxWidth="MaxWidth.Small" Class="mt-16 text-center">
+            <MudText Typo="Typo.h4">Portfolio Not Found</MudText>
+        </MudContainer>
+    }
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-8 mb-16">
+        <div class="mb-12">
+            <MudText Typo="Typo.h3" Class="font-weight-bold mb-2">About Me</MudText>
+            <MudText Typo="Typo.body1" Class="mud-text-secondary" Style="font-size: 1.2rem; line-height: 1.8;">
+                @Portfolio.Bio
+            </MudText>
+        </div>
+
+        <MudGrid>
+            <!-- Left Column: Skills & Tech -->
+            <MudItem xs="12" md="7">
+                <MudText Typo="Typo.h5" Class="font-weight-bold mb-6">Expertise</MudText>
+                
+                <div class="mb-8">
+                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Core Skills</MudText>
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var skill in Portfolio.Skills)
+                        {
+                            <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined">@skill.Name</MudChip>
+                        }
+                    </div>
+                </div>
+
+                <div class="mb-8">
+                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Tech Stack</MudText>
+                    <MudGrid Spacing="2">
+                        @foreach (var tech in Portfolio.TechStacks)
+                        {
+                            <MudItem xs="6" sm="4">
+                                <MudPaper Elevation="0" Class="pa-3 d-flex align-center gap-3 mud-bg-surface border-1 border-solid mud-border-lines-default">
+                                    @if (!string.IsNullOrEmpty(tech.IconUrl))
+                                    {
+                                        <MudImage Src="@tech.IconUrl" Width="24" Height="24" />
+                                    }
+                                    <MudText Typo="Typo.body2">@tech.Name</MudText>
+                                </MudPaper>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </div>
+
+                @if (Portfolio.Competencies.Any())
+                {
+                    <div class="mb-8">
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Competencies</MudText>
+                        <MudList T="string" Dense="true">
+                            @foreach (var comp in Portfolio.Competencies)
+                            {
+                                <MudListItem Icon="@LucideIcons.Sparkles" IconClass="lucide-icon" Text="@comp.Name" />
+                            }
+                        </MudList>
+                    </div>
+                }
+            </MudItem>
+
+            <!-- Right Column: Education & Languages -->
+            <MudItem xs="12" md="5">
+                <MudText Typo="Typo.h5" Class="font-weight-bold mb-6">Background</MudText>
+
+                <div class="mb-8">
+                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-4">Education</MudText>
+                    @foreach (var edu in Portfolio.Education)
+                    {
+                        <div class="mb-4">
+                            <MudText Typo="Typo.subtitle2" Class="font-weight-bold">@edu.Degree - @edu.Field</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">@edu.Institution</MudText>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                @edu.StartDate.ToString("yyyy") - @(edu.EndDate?.ToString("yyyy") ?? "Present")
+                            </MudText>
+                        </div>
+                    }
+                </div>
+
+                @if (Portfolio.Licenses.Any())
+                {
+                    <div class="mb-8">
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-4">Licenses & Certs</MudText>
+                        @foreach (var lic in Portfolio.Licenses)
+                        {
+                            <div class="mb-3 d-flex align-start gap-2">
+                                <MudIcon Icon="@LucideIcons.Award" IconClass="lucide-icon" Size="Size.Small" Color="Color.Primary" />
+                                <div>
+                                    <MudText Typo="Typo.body2" Class="font-weight-bold">@lic.Name</MudText>
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@lic.IssuingOrganization</MudText>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+
+                <div class="mb-8">
+                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-4">Languages</MudText>
+                    @foreach (var lang in Portfolio.Languages)
+                    {
+                        <div class="d-flex justify-space-between align-center mb-2">
+                            <MudText Typo="Typo.body2">@lang.Name</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@lang.ProficiencyLevel</MudText>
+                        </div>
+                    }
+                </div>
+
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
+}
+
+@code {
+    [Parameter] public string username { get; set; } = string.Empty;
+    [Inject] PortfolioStateService PortfolioState { get; set; } = null!;
+
+    private PortfolioDto? Portfolio => PortfolioState.CurrentPortfolio;
+
+    protected override void OnInitialized()
+    {
+        PortfolioState.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        PortfolioState.OnChange -= StateHasChanged;
+    }
+}

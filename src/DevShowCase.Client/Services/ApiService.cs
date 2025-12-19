@@ -1,4 +1,4 @@
-﻿using DevShowcase.Shared.DTOs.Portfolio;
+using DevShowcase.Shared.DTOs.Portfolio;
 using DevShowcase.Shared.DTOs.Profile;
 using DevShowcase.Shared.DTOs.Public;
 using DevShowcase.Shared.DTOs.Admin;
@@ -163,4 +163,9 @@ public class ApiService(HttpClient httpClient)
     // Contact Messages
     public async Task<List<AdminContactMessageDto>> GetContactMessagesAsync() => await httpClient.GetFromJsonAsync<List<AdminContactMessageDto>>("api/contact") ?? new();
     public async Task MarkContactMessageAsReadAsync(int id) { (await httpClient.PatchAsync($"api/contact/{id}/read", null)).EnsureSuccessStatusCode(); }
+    public async Task SendMessageAsync(string targetUsername, ContactMessageDto dto)
+    {
+        var response = await httpClient.PostAsJsonAsync($"api/contact/{targetUsername}", dto);
+        response.EnsureSuccessStatusCode();
+    }
 }

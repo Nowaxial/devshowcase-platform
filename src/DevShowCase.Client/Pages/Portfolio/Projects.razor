@@ -1,0 +1,121 @@
+@page "/{username}/projects"
+@layout PortfolioLayout
+@using DevShowcase.Shared.DTOs.Public
+@using DevShowcase.Client.Services
+@implements IDisposable
+
+<PageTitle>Projects - @(Portfolio?.FirstName) @(Portfolio?.LastName)</PageTitle>
+
+@if (Portfolio == null)
+{
+    @if (!PortfolioState.IsLoading)
+    {
+        <MudContainer MaxWidth="MaxWidth.Small" Class="mt-16 text-center">
+            <MudText Typo="Typo.h4">Portfolio Not Found</MudText>
+        </MudContainer>
+    }
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-8 mb-16">
+        <div class="d-flex flex-column mb-8">
+            <MudText Typo="Typo.h3" Class="font-weight-bold mb-2">Projects</MudText>
+            <MudText Typo="Typo.body1" Color="Color.Secondary">A collection of my work, ranging from small utilities to full-scale applications.</MudText>
+        </div>
+
+        @if (!Portfolio.Projects.Any())
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mt-8">
+                No projects have been added to this portfolio yet.
+            </MudAlert>
+        }
+        else
+        {
+            <MudGrid>
+                @foreach (var project in Portfolio.Projects)
+                {
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudCard Elevation="2" Class="h-100 d-flex flex-column hover-elevate rounded-lg border-thin">
+                            @if (!string.IsNullOrEmpty(project.ImageUrl))
+                            {
+                                <MudCardMedia Image="@project.ImageUrl" Height="200" />
+                            }
+                            else
+                            {
+                                <div class="d-flex align-center justify-center mud-bg-surface-grey" style="height: 200px;">
+                                    <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Large" Color="Color.Default" />
+                                </div>
+                            }
+                            <MudCardContent Class="flex-grow-1">
+                                <div class="d-flex justify-space-between align-start mb-2">
+                                    <MudText Typo="Typo.h6" Class="font-weight-bold">@project.Title</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@project.StartDate?.ToString("yyyy")</MudText>
+                                </div>
+                                <MudText Typo="Typo.body2" Class="mud-text-secondary line-clamp-3 mb-4">@project.Description</MudText>
+                                
+                                <div class="d-flex flex-wrap gap-1 mt-auto">
+                                    @if (!string.IsNullOrEmpty(project.Technologies))
+                                    {
+                                        try {
+                                             var techs = System.Text.Json.JsonSerializer.Deserialize<List<string>>(project.Technologies);
+                                             if(techs != null) {
+                                                foreach(var tech in techs) {
+                                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" Class="px-2 py-0">@tech</MudChip>
+                                                }
+                                             }
+                                        } catch {
+                                            <MudChip T="string" Size="Size.Small" Variant="Variant.Text">@project.Technologies</MudChip>
+                                        }
+                                    }
+                                </div>
+                            </MudCardContent>
+                            <MudCardActions Class="pb-4 px-4">
+                                @if (!string.IsNullOrEmpty(project.GithubUrl))
+                                {
+                                    <MudButton StartIcon="@Icons.Custom.Brands.GitHub" Href="@project.GithubUrl" Target="_blank" Variant="Variant.Text" Color="Color.Default" Size="Size.Small">Code</MudButton>
+                                }
+                                @if (!string.IsNullOrEmpty(project.ProjectUrl))
+                                {
+                                    <MudButton StartIcon="@Icons.Material.Filled.Launch" Href="@project.ProjectUrl" Target="_blank" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small">Live Demo</MudButton>
+                                }
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+    </MudContainer>
+}
+
+<style>
+    .hover-elevate {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .hover-elevate:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--mud-elevation-4);
+    }
+    .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+
+@code {
+    [Parameter] public string username { get; set; } = string.Empty;
+    [Inject] PortfolioStateService PortfolioState { get; set; } = null!;
+
+    private PortfolioDto? Portfolio => PortfolioState.CurrentPortfolio;
+
+    protected override void OnInitialized()
+    {
+        PortfolioState.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        PortfolioState.OnChange -= StateHasChanged;
+    }
+}
