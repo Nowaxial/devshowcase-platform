@@ -53,6 +53,7 @@ public class PortfolioController(ApplicationDbContext context) : ControllerBase
             FirstName = user.FirstName ?? "",
             LastName = user.LastName ?? "",
             Bio = user.Bio ?? "",
+            AboutMe = user.AboutMe ?? "",
             Location = user.Location ?? "",
             ProfileImageUrl = user.ProfileImageUrl ?? "",
             Email = user.Email ?? "",

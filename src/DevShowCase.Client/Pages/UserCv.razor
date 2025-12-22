@@ -75,7 +75,7 @@ else
                 <section class="cv-section">
                     <h2 class="cv-section-title">About</h2>
                     <div class="cv-section-text">
-                        @Portfolio.Bio
+                        @Portfolio.AboutMe
                     </div>
                 </section>
 
@@ -211,6 +211,8 @@ else
         display: flex;
         flex-direction: column;
         gap: 2rem;
+        border-width: .5px;
+        border-radius: .5px;
     }
 
     @@media print {

@@ -30,7 +30,9 @@
                 
                 <MudTextField @bind-Value="_profile.ProfileImageUrl" Label="Profile Image URL" Class="mt-4" HelperText="Direct link to your profile picture" />
 
-                <MudTextField @bind-Value="_profile.Bio" Label="Bio / About Me" Lines="5" Class="mt-4" HelperText="Use markdown or plain text. This is your chance to verify the AI generated bio." />
+                <MudTextField @bind-Value="_profile.Bio" Label="Short Headline / Bio" Lines="1" Class="mt-4" HelperText="A catchy one-liner for your header." />
+
+                <MudTextField @bind-Value="_profile.AboutMe" Label="Detailed About Me" Lines="5" Class="mt-4" HelperText="Tell your story. This will appear in the 'About' section of your portfolio." />
                 
                 <MudText Typo="Typo.h6" Class="mt-8 mb-4">Social Links</MudText>
                 <div class="d-flex gap-4">

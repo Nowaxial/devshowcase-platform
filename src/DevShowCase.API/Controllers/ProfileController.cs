@@ -45,6 +45,7 @@ public class ProfileController : ControllerBase
              FirstName = user.FirstName,
              LastName = user.LastName,
              Bio = user.Bio,
+             AboutMe = user.AboutMe,
              Location = user.Location,
              ProfileImageUrl = user.ProfileImageUrl,
              GithubUrl = user.GithubUrl,
@@ -67,6 +68,7 @@ public class ProfileController : ControllerBase
         user.FirstName = dto.FirstName;
         user.LastName = dto.LastName;
         user.Bio = dto.Bio;
+        user.AboutMe = dto.AboutMe;
         user.Location = dto.Location;
         user.ProfileImageUrl = dto.ProfileImageUrl;
         user.GithubUrl = dto.GithubUrl;

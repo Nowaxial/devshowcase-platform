@@ -61,6 +61,16 @@ else
         </div>
 
         <MudDivider Class="my-8" />
+        
+        <!-- About Me Section -->
+        @if (!string.IsNullOrEmpty(Portfolio.AboutMe))
+        {
+            <MudText Typo="Typo.h5" Class="font-weight-bold mb-4">About Me</MudText>
+            <MudText Typo="Typo.body1" Class="mud-text-secondary mb-8" Style="white-space: pre-line;">
+                @Portfolio.AboutMe
+            </MudText>
+            <MudDivider Class="my-8" />
+        }
 
         <!-- Experience Section -->
         @if (Portfolio.Experiences.Any())
