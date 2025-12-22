@@ -7,6 +7,7 @@
 @inject ApiService ApiService
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject PortfolioStateService PortfolioState
 
 <PageTitle>Manage Experience</PageTitle>
 
@@ -82,6 +83,7 @@
 
         if (result != null && !result.Canceled)
         {
+            PortfolioState.ClearCache();
             await LoadData();
         }
     }
@@ -94,6 +96,7 @@
 
         if (result != null && !result.Canceled)
         {
+            PortfolioState.ClearCache();
             await LoadData();
         }
     }
@@ -110,6 +113,7 @@
             try
             {
                 await ApiService.DeleteExperienceAsync(experience.Id);
+                PortfolioState.ClearCache();
                 Snackbar.Add("Experience deleted", Severity.Success);
                 await LoadData();
             }

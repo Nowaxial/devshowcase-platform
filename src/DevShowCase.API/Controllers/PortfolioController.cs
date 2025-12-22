@@ -56,6 +56,8 @@ public class PortfolioController(ApplicationDbContext context) : ControllerBase
             Location = user.Location ?? "",
             ProfileImageUrl = user.ProfileImageUrl ?? "",
             Email = user.Email ?? "",
+            GithubUrl = user.GithubUrl ?? "",
+            LinkedInUrl = user.LinkedInUrl ?? "",
             ThemeCssFile = user.SelectedTheme?.CssFileName ?? "theme-minimal.css",
             
             Experiences = user.Experiences.Select(e => new ExperienceDto
@@ -68,6 +70,7 @@ public class PortfolioController(ApplicationDbContext context) : ControllerBase
                 Description = e.Description,
                 Location = e.Location,
                 IsCurrent = e.IsCurrent,
+                EmploymentType = e.EmploymentType,
                 UserId = e.UserId
             }).OrderByDescending(e => e.IsCurrent).ThenByDescending(e => e.StartDate).ToList(),
 

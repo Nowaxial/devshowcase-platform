@@ -10,6 +10,8 @@ public class User : IdentityUser
     public string? Bio { get; set; }
     public string? Location { get; set; }
     public string? ProfileImageUrl { get; set; }
+    public string? GithubUrl { get; set; }
+    public string? LinkedInUrl { get; set; }
 
     // Preferences
     public int? SelectedThemeId { get; set; }

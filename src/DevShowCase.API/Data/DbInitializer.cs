@@ -90,17 +90,26 @@ public static class DbInitializer
             // Seed John Doe User
             var email = "john.doe@example.com";
             var user = await userManager.FindByEmailAsync(email);
+            if (user != null && user.UserName != "johndoe")
+            {
+                user.UserName = "johndoe";
+                user.NormalizedUserName = "JOHNDOE";
+                await userManager.UpdateAsync(user);
+            }
+            
             if (user == null)
             {
                 user = new User
                 {
-                    UserName = "john.doe",
+                    UserName = "johndoe",
                     Email = email,
                     FirstName = "John",
                     LastName = "Doe",
                     Bio = "Fullstack Developer with a focus on C#/.NET and frontend web security. Experienced in both backend and frontend development.|Certified in Azure AI Fundamentals.",
                     Location = "Gothenburg, Sweden",
                     ProfileImageUrl = "https://raw.githubusercontent.com/Nowaxial/KaffePartyBootstrapFrontendExercise8Lexicon/main/images/HR.png",
+                    GithubUrl = "https://github.com/Nowaxial",
+                    LinkedInUrl = "https://linkedin.com/in/johndoe",
                     EmailConfirmed = true,
                     PrefersDarkMode = false
                 };

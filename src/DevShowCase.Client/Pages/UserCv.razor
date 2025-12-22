@@ -3,657 +3,434 @@
 @using DevShowcase.Client.Shared
 @using DevShowcase.Shared.DTOs.Public
 @using DevShowcase.Client.Services
-@inject ApiService ApiService
+@implements IDisposable
 
 <PageTitle>@(Portfolio?.FirstName ?? username) - CV</PageTitle>
 
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
-
-@if (_loading)
+@if (Portfolio == null)
 {
-    <div class="d-flex justify-center align-center" style="height: 60vh;">
-        <MudProgressCircular Color="Color.Dark" Indeterminate="true" />
-    </div>
-}
-else if (Portfolio == null)
-{
-    <div class="cv-container text-center p-5">
-        <h1>User Not Found</h1>
-        <p>The requested portfolio could not be loaded.</p>
-        <a href="/" class="btn btn-primary">Go Home</a>
-    </div>
+    @if (!PortfolioState.IsLoading)
+    {
+        <MudContainer MaxWidth="MaxWidth.Small" Class="mt-16 text-center">
+            <MudText Typo="Typo.h4">Portfolio Not Found</MudText>
+            <MudText Typo="Typo.body1" Class="mt-2">The requested user portfolio could not be found.</MudText>
+        </MudContainer>
+    }
 }
 else
 {
     <main class="cv-page">
-        
-            <section class="cv-outer" aria-label="Resume Content">
-                <!-- HEADER (port av Header.tsx) -->
-                <header class="cv-header">
-                    <div class="cv-header-left">
-                        <h1 class="cv-name" id="resume-name">
-                            @Portfolio.FirstName @Portfolio.LastName
-                        </h1>
+        <section class="cv-container" aria-label="Resume Content">
+            
+            @* Header Section *@
+            <header class="cv-header">
+                <div class="cv-header-content">
+                    <h1 class="cv-name">@Portfolio.FirstName @Portfolio.LastName</h1>
+                    <p class="cv-headline">@Portfolio.Bio</p>
+                    
+                    <p class="cv-location">
+                        <a href="@($"https://www.google.com/maps/search/{Uri.EscapeDataString(Portfolio.Location ?? "")}")" target="_blank" rel="noopener noreferrer">
+                            @Portfolio.Location
+                        </a>
+                    </p>
 
-                        @if (!string.IsNullOrEmpty(Portfolio.Bio))
+                    <div class="cv-social-links" role="list">
+                        @if (!string.IsNullOrEmpty(Portfolio.Email))
                         {
-                            var bioParts = Portfolio.Bio.Split('|');
-                            <p class="cv-shortabout" aria-labelledby="resume-name">
-                                @(bioParts.Length > 0 ? bioParts[0].Trim() : "")
-                            </p>
-                        }
-
-                        <p class="cv-location-line">
-                            <a class="cv-location-link"
-                               href="@($"https://www.google.com/maps/search/{Uri.EscapeDataString(Portfolio.Location ?? string.Empty)}")"
-                               target="_blank"
-                               rel="noopener noreferrer"
-                               aria-label=@($"Location: {Portfolio.Location}")>
-                                @Portfolio.Location
+                            <a href="mailto:@Portfolio.Email" aria-label="Email" class="cv-icon-btn">
+                                <MudIcon Icon="@LucideIcons.Mail" Size="Size.Small" />
                             </a>
-                        </p>
-
-                        <div class="cv-contact-links" role="list" aria-label="Contact links">
-                            @if (!string.IsNullOrEmpty(Portfolio.GithubUrl))
-                            {
-                                <a href="@NormalizeWebsite(Portfolio.GithubUrl)"
-                                   aria-label="Personal website"
-                                   target="_blank"
-                                   rel="noopener noreferrer"
-                                   class="cv-contact-btn">
-                                    <MudIcon Icon="@LucideIcons.Mail" Size="Size.Small" />
-                                </a>
-                            }
-                            @if (!string.IsNullOrEmpty(Portfolio.Email))
-                            {
-                                <a href="@($"mailto:{Portfolio.Email}")"
-                                   aria-label="Email"
-                                   target="_blank"
-                                   rel="noopener noreferrer"
-                                   class="cv-contact-btn">
-                                    <MudIcon Icon="@LucideIcons.Mail" Size="Size.Small" />
-                                </a>
-                            }
-                            @* Phone saknas i din dto, lägg till om du vill *@
-                            @if (!string.IsNullOrEmpty(Portfolio.GithubUrl))
-                            {
-                                <a href="@NormalizeGithub(Portfolio.GithubUrl)"
-                                   aria-label="GitHub"
-                                   target="_blank"
-                                   rel="noopener noreferrer"
-                                   class="cv-contact-btn">
-                                    <MudIcon Icon="@LucideIcons.Github" Size="Size.Small" />
-                                </a>
-                            }
-                            @if (!string.IsNullOrEmpty(Portfolio.LinkedInUrl))
-                            {
-                                <a href="@NormalizeLinkedIn(Portfolio.LinkedInUrl)"
-                                   aria-label="LinkedIn"
-                                   target="_blank"
-                                   rel="noopener noreferrer"
-                                   class="cv-contact-btn">
-                                    <MudIcon Icon="@LucideIcons.Linkedin" Size="Size.Small" />
-                                </a>
-                            }
-                        </div>
-
-                        <div class="cv-contact-print" aria-label="Print contact information">
-                            @if (!string.IsNullOrEmpty(Portfolio.GithubUrl))
-                            {
-                                var site = NormalizeWebsite(Portfolio.GithubUrl);
-                                <a class="cv-contact-print-link" href="@site">
-                                    @(new Uri(site)).Host
-                                </a>
-                                <span aria-hidden="true">/</span>
-                            }
-                            @if (!string.IsNullOrEmpty(Portfolio.Email))
-                            {
-                                <a class="cv-contact-print-link" href="@($"mailto:{Portfolio.Email}")">
-                                    @Portfolio.Email
-                                </a>
-                                <span aria-hidden="true">/</span>
-                            }
-                            @* Phone motsvarande här om du har fält *@
-                        </div>
-                    </div>
-
-                    <div class="cv-avatar" aria-hidden="true">
-                        @if (!string.IsNullOrEmpty(Portfolio.ProfileImageUrl))
-                        {
-                            <img class="cv-avatar-img"
-                                 src="@Portfolio.ProfileImageUrl"
-                                 alt="@($"{Portfolio.FirstName} {Portfolio.LastName}'s profile picture")" />
                         }
-                        else
+                        @if (!string.IsNullOrEmpty(Portfolio.GithubUrl))
                         {
-                    <span class="cv-avatar-fallback">
-                        @string.Join("", $"{Portfolio.FirstName} {Portfolio.LastName}"
-                                                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
-                                                .Select(n => n[0]))
-                    </span>
-                                        }
+                            <a href="@Portfolio.GithubUrl" target="_blank" aria-label="GitHub" class="cv-icon-btn">
+                                <MudIcon Icon="@LucideIcons.Github" Size="Size.Small" />
+                            </a>
+                        }
+                        @if (!string.IsNullOrEmpty(Portfolio.LinkedInUrl))
+                        {
+                            <a href="@Portfolio.LinkedInUrl" target="_blank" aria-label="LinkedIn" class="cv-icon-btn">
+                                <MudIcon Icon="@LucideIcons.Linkedin" Size="Size.Small" />
+                            </a>
+                        }
                     </div>
-                </header>
-
-                <!-- FULLRESUME BODY (Summary + Work + Education + Skills) -->
-                <div class="cv-body">
-                    <!-- Summary / About -->
-                    <section class="cv-section" id="about-section">
-                        <h2 class="cv-section-title">About</h2>
-                        <div class="cv-text" aria-labelledby="about-section">
-                            @Portfolio.Bio
-                        </div>
-                    </section>
-
-                    <!-- Work Experience -->
-                    <section class="cv-section" id="work-experience">
-                        <h2 class="cv-section-title">Work Experience</h2>
-                        <div class="cv-work-list" role="feed" aria-labelledby="work-experience">
-                            @foreach (var exp in Portfolio.Experiences)
-                            {
-                                <article class="cv-work" role="article">
-                                    <div class="cv-work-header">
-                                        <div class="cv-work-title-row">
-                                            <p class="cv-work-title">@exp.Position</p>
-                                             @if(!string.IsNullOrEmpty(exp.Location)) { 
-                                                <div class="cv-chip">
-                                                    <p class="cv-chip-text">@exp.Location</p>
-                                                </div>
-                                             }
-                                        </div>
-                                        <div class="cv-work-dates">
-                                            @exp.StartDate.ToString("MMM yyyy") - @(exp.IsCurrent ? "Present" : exp.EndDate?.ToString("MMM yyyy"))
-                                        </div>
-                                    </div>
-
-                                    <div class="cv-work-meta">
-                                        <div class="cv-work-company-row">
-                                            <span>@exp.Company</span>
-                                        </div>
-                                        <p class="cv-work-description">
-                                            @exp.Description
-                                        </p>
-                                    </div>
-                                </article>
-                            }
-                        </div>
-                    </section>
-
-                    <!-- Education -->
-                    <section class="cv-section" id="education-section">
-                        <h2 class="cv-section-title">Education</h2>
-                        <div class="cv-edu-list" role="feed" aria-labelledby="education-section">
-                            <article role="article">
-                                <div class="cv-edu-card">
-                                    <div class="cv-edu-header">
-                                        <h3 class="cv-edu-school">Lexicon IT-Proffs</h3>
-                                        <div class="cv-edu-period">2025 - 2026</div>
-                                    </div>
-                                    <div class="cv-edu-text">Systemutvecklare .NET</div>
-                                </div>
-                            </article>
-                            <article role="article">
-                                <div class="cv-edu-card">
-                                    <div class="cv-edu-header">
-                                        <h3 class="cv-edu-school">JENSEN yrkeshögskola</h3>
-                                        <div class="cv-edu-period">2021 - 2023</div>
-                                    </div>
-                                    <div class="cv-edu-text">Frontend Developer</div>
-                                </div>
-                            </article>
-                        </div>
-                    </section>
-
-                    <!-- Skills -->
-                    <section class="cv-section" id="skills-section">
-                        <h2 class="cv-section-title">Skills</h2>
-                        <ul class="cv-skill-list"
-                            aria-label="List of skills"
-                            aria-labelledby="skills-section">
-                            @foreach (var skill in new[]
-                                                    {
-                                                "C#", "ASP.NET", "Blazor", "HTML", "CSS",
-                                                "JavaScript", "SQL", "Entity Framework Core", "TDD", "Microsoft Azure"
-                                                })
-                            {
-                                <li>
-                                    <div class="cv-skill-pill" aria-label=@($"Skill: {skill}")>
-                                        @skill
-                                    </div>
-                                </li>
-                            }
-                        </ul>
-                    </section>
                 </div>
-            </section>
-        
 
-        
+                <div class="cv-avatar-container">
+                    @if (!string.IsNullOrEmpty(Portfolio.ProfileImageUrl))
+                    {
+                        <img class="cv-avatar" src="@Portfolio.ProfileImageUrl" alt="@Portfolio.FirstName @Portfolio.LastName" />
+                    }
+                    else
+                    {
+                        <div class="cv-avatar-placeholder">
+                            @Portfolio.FirstName?.FirstOrDefault()@Portfolio.LastName?.FirstOrDefault()
+                        </div>
+                    }
+                </div>
+            </header>
+
+            <div class="cv-body">
+                @* About Section *@
+                <section class="cv-section">
+                    <h2 class="cv-section-title">About</h2>
+                    <div class="cv-section-text">
+                        @Portfolio.Bio
+                    </div>
+                </section>
+
+                @* Work Experience Section *@
+                @if (Portfolio.Experiences.Any())
+                {
+                    <section class="cv-section">
+                        <h2 class="cv-section-title">Work Experience</h2>
+                        <div class="cv-list">
+                            @foreach (var exp in Portfolio.Experiences.OrderByDescending(e => e.StartDate))
+                            {
+                                <div class="cv-item">
+                                    <div class="cv-item-header">
+                                        <div class="cv-item-title-row">
+                                            <h3 class="cv-item-title">@exp.Position</h3>
+                                            @if (!string.IsNullOrEmpty(exp.Location))
+                                            {
+                                                <span class="cv-badge">@exp.Location</span>
+                                            }
+                                        </div>
+                                        <span class="cv-item-date">
+                                            @exp.StartDate.ToString("MMM yyyy") - @(exp.IsCurrent ? "Present" : exp.EndDate?.ToString("MMM yyyy"))
+                                        </span>
+                                    </div>
+                                    <div class="cv-item-sub">
+                                        <span class="cv-company">@exp.Company</span>
+                                        @if (!string.IsNullOrEmpty(exp.EmploymentType))
+                                        {
+                                            <span>• @exp.EmploymentType</span>
+                                        }
+                                    </div>
+                                    <p class="cv-item-description">@exp.Description</p>
+                                </div>
+                            }
+                        </div>
+                    </section>
+                }
+
+                @* Education Section *@
+                @if (Portfolio.Education.Any())
+                {
+                    <section class="cv-section">
+                        <h2 class="cv-section-title">Education</h2>
+                        <div class="cv-list">
+                            @foreach (var edu in Portfolio.Education.OrderByDescending(e => e.StartDate))
+                            {
+                                <div class="cv-item">
+                                    <div class="cv-item-header">
+                                        <h3 class="cv-item-title">@edu.Institution</h3>
+                                        <span class="cv-item-date">
+                                            @edu.StartDate.ToString("yyyy") - @(edu.EndDate?.ToString("yyyy") ?? "Present")
+                                        </span>
+                                    </div>
+                                    <p class="cv-item-text">@edu.Degree, @edu.Field</p>
+                                </div>
+                            }
+                        </div>
+                    </section>
+                }
+
+                @* Skills Section *@
+                @if (Portfolio.Skills.Any())
+                {
+                    <section class="cv-section">
+                        <h2 class="cv-section-title">Skills</h2>
+                        <div class="cv-tags">
+                            @foreach (var skill in Portfolio.Skills)
+                            {
+                                <span class="cv-tag">@skill.Name</span>
+                            }
+                        </div>
+                    </section>
+                }
+                
+                @* Licenses Section *@
+                @if (Portfolio.Licenses.Any())
+                {
+                    <section class="cv-section">
+                        <h2 class="cv-section-title">Certifications</h2>
+                        <div class="cv-list">
+                            @foreach (var lic in Portfolio.Licenses.OrderByDescending(l => l.IssueDate))
+                            {
+                                <div class="cv-item">
+                                    <div class="cv-item-header">
+                                        <h3 class="cv-item-title">@lic.Name</h3>
+                                        <span class="cv-item-date">@lic.IssueDate.ToString("MMM yyyy")</span>
+                                    </div>
+                                    <p class="cv-item-text">@lic.IssuingOrganization</p>
+                                </div>
+                            }
+                        </div>
+                    </section>
+                }
+
+                @* Languages Section *@
+                @if (Portfolio.Languages.Any())
+                {
+                    <section class="cv-section">
+                        <h2 class="cv-section-title">Languages</h2>
+                        <div class="cv-tags">
+                            @foreach (var lang in Portfolio.Languages)
+                            {
+                                <span class="cv-tag">@lang.Name (@lang.ProficiencyLevel)</span>
+                            }
+                        </div>
+                    </section>
+                }
+            </div>
+        </section>
     </main>
 }
 
 <style>
+    :root {
+        --cv-bg: #ffffff;
+        --cv-text-main: #050914;
+        --cv-text-muted: #6b737f;
+        --cv-text-design: #4b5563;
+        --cv-border: #e5e7eb;
+        --cv-badge-bg: #eeeff0;
+        --cv-badge-text: #54575e;
+    }
+
     .cv-page {
-        min-height: 100vh;
-        background-color: #f9fafb;
-        font-family: "JetBrains Mono", monospace;
-        padding: 32px 16px;
+        background-color: transparent;
+        padding: 2rem 1rem;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
 
-    /* max-w-3xl mx-auto w-full md:rounded-lg border-[0.5px] ... px-4 */
-    .cv-outer {
-        max-width: 768px;
-        width: 100%;
+    .cv-container {
+        max-width: 42rem; /* max-w-2xl */
         margin: 0 auto;
-        border: 0.5px solid #d4d4d8;
-        border-radius: 0;
         display: flex;
-        justify-content: center;
-        padding: 0 16px;
+        flex-direction: column;
+        gap: 2rem;
     }
 
-    @@media (min-width: 768px) {
-        .cv-outer {
-            border-radius: 12px;
-        }
-    }
-
-    /* mx-auto w-full max-w-2xl space-y-8 bg-white my-8 px-4 */
-    .cv-inner {
-        max-width: 640px;
-        width: 100%;
-        margin: 32px auto;
-        background-color: #ffffff;
-        padding: 0 16px 32px;
+    @@media print {
+        .cv-page { padding: 0; }
+        .cv-container { max-width: 100%; gap: 1rem; }
     }
 
     /* Header */
     .cv-header {
         display: flex;
-        align-items: flex-start;
         justify-content: space-between;
-        gap: 16px;
-        margin-top: 24px;
-        margin-bottom: 24px;
+        align-items: flex-start;
+        gap: 1rem;
     }
 
-    @@media (min-width: 768px) {
-        .cv-header {
-            align-items: center;
-        }
-    }
-
-    .cv-header-left {
-        flex: 1 1 auto;
+    .cv-header-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
     }
 
     .cv-name {
-        font-size: 1.5rem; /* text-2xl */
+        font-size: 1.5rem;
         font-weight: 700;
-        margin: 0 0 4px;
+        color: var(--cv-text-main);
     }
 
-    .cv-shortabout {
-        max-width: 26rem;
-        font-family: "JetBrains Mono", monospace;
+    .cv-headline {
         font-size: 0.875rem;
-        color: #4b5563; /* text-design-resume-ish */
-        margin: 0 0 4px;
+        color: var(--cv-text-design);
+        line-height: 1.5;
+        max-width: 28rem;
     }
 
-    .cv-location-line {
-        max-width: 26rem;
-        font-family: "JetBrains Mono", monospace;
+    .cv-location {
         font-size: 0.75rem;
-        color: #111827;
-        margin: 0;
     }
 
-    .cv-location-link {
-        display: inline-flex;
-        gap: 6px;
-        align-items: baseline;
-        line-height: 1.2;
+    .cv-location a {
         color: #9ca0a8;
         text-decoration: none;
     }
 
-        .cv-location-link:hover {
-            text-decoration: underline;
-        }
-
-    /* contact buttons rad */
-    .cv-contact-links {
-        display: flex;
-        gap: 4px;
-        padding-top: 4px;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 0.875rem;
-        color: #4b5563;
-    }
-
-    .cv-contact-btn {
-        width: 32px;
-        height: 32px;
-        border-radius: 6px;
-        border: 1px solid #d1d5db;
-        background-color: #f9fafb;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        text-decoration: none;
-        color: #111827;
-        transition: background-color 0.15s ease, color 0.15s ease;
-    }
-
-        .cv-contact-btn:hover {
-            background-color: #e5e7eb;
-        }
-
-    /* print kontakt-raden – i praktiken bara desktop/print om du vill */
-    .cv-contact-print {
-        display: none;
-        gap: 8px;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 0.875rem;
-        color: #4b5563;
-    }
-
-    .cv-contact-print-link {
+    .cv-location a:hover {
         text-decoration: underline;
     }
 
-    /* Avatar size-20 md:size-28 */
-    .cv-avatar {
-        position: relative;
+    .cv-social-links {
+        display: flex;
+        gap: 0.25rem;
+        padding-top: 0.25rem;
+    }
+
+    .cv-icon-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border: 1px solid var(--cv-border);
+        border-radius: 0.375rem;
+        background-color: var(--cv-bg);
+        color: var(--cv-text-main);
+        transition: all 0.2s;
+    }
+
+    .cv-icon-btn:hover {
+        background-color: #f9fafb;
+    }
+
+    .cv-avatar-container {
         flex-shrink: 0;
-        width: 80px;
-        height: 80px;
-        border-radius: 999px;
-        overflow: hidden;
     }
 
-    @@media (min-width: 768px) {
-        .cv-avatar {
-            width: 112px;
-            height: 112px;
-        }
-    }
-
-    .cv-avatar-img {
-        width: 100%;
-        height: 100%;
+    .cv-avatar, .cv-avatar-placeholder {
+        width: 5rem;
+        height: 5rem;
+        border-radius: 10px;
         object-fit: cover;
     }
 
-    .cv-avatar-fallback {
-        width: 100%;
-        height: 100%;
-        background-color: #e5e7eb;
+    @@media (min-width: 768px) {
+        .cv-avatar, .cv-avatar-placeholder {
+            width: 7rem;
+            height: 7rem;
+        }
+    }
+
+    .cv-avatar-placeholder {
+        background-color: var(--cv-badge-bg);
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 600;
+        font-size: 1.5rem;
+        color: var(--cv-badge-text);
     }
 
-    /* Body (Summary + Work + Education + Skills) */
+    /* Body */
     .cv-body {
         display: flex;
         flex-direction: column;
-        gap: 24px; /* space-y-6 */
+        gap: 1.5rem;
     }
 
     .cv-section {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 0.75rem;
     }
 
     .cv-section-title {
-        font-size: 1.25rem; /* text-xl */
+        font-size: 1.125rem;
         font-weight: 700;
-        margin: 0;
+        color: var(--cv-text-main);
     }
 
-    .cv-text {
-        font-family: "JetBrains Mono", monospace;
+    .cv-section-text {
         font-size: 0.875rem;
-        color: #4b5563;
+        color: var(--cv-text-design);
+        line-height: 1.5;
+        text-wrap: pretty;
     }
 
-    /* WorkExperience layout */
-    .cv-work-list {
+    /* Items */
+    .cv-list {
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 1rem;
     }
 
-    .cv-work {
-        font-family: "JetBrains Mono", monospace;
+    .cv-item {
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 0.25rem;
     }
 
-    .cv-work-header {
+    .cv-item-header {
         display: flex;
-        flex-wrap: wrap;
         justify-content: space-between;
         align-items: flex-start;
-        gap: 8px;
+        gap: 0.5rem;
     }
 
-    .cv-work-title-row {
+    .cv-item-title-row {
         display: flex;
-        flex-wrap: wrap;
         align-items: center;
-        gap: 8px;
+        gap: 0.5rem;
+        flex-wrap: wrap;
     }
 
-    .cv-work-title {
+    .cv-item-title {
         font-size: 1rem;
         font-weight: 600;
-        color: #050914;
-        margin: 0;
     }
 
-    .cv-chip {
-        display: flex;
-        align-items: center;
-        padding: 2px 7px;
-        border-radius: 999px;
-        background-color: #eeeff0;
-    }
-
-    .cv-chip-text {
-        font-size: 12px;
-        font-weight: 600;
-        color: #54575e;
-        margin: 0;
-    }
-
-    .cv-work-dates {
+    .cv-item-date {
         font-size: 0.875rem;
-        color: #54575e;
-        margin: 0;
+        color: var(--cv-text-muted);
+        text-wrap: nowrap;
     }
 
-    .cv-work-meta {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        margin-top: 4px;
-    }
-
-    .cv-work-company-row {
+    .cv-item-sub {
         font-size: 0.875rem;
-        font-weight: 500;
-        color: #54575e;
+        color: var(--cv-text-muted);
         display: flex;
-        flex-wrap: wrap;
-        gap: 4px;
-        margin: 0;
+        gap: 0.25rem;
     }
 
-    .cv-work-description {
+    .cv-item-description {
         font-size: 0.875rem;
-        font-weight: 500;
         color: #6c737f;
-        margin: 0;
+        margin-top: 0.375rem;
     }
 
-    /* Education cards */
-    .cv-edu-list {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-    }
-
-    .cv-edu-card {
-        border-radius: 8px;
-        background-color: #ffffff;
-    }
-
-    .cv-edu-header {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        justify-content: space-between;
-    }
-
-    @@media (min-width: 640px) {
-        .cv-edu-header {
-            flex-direction: row;
-            align-items: center;
-        }
-    }
-
-    .cv-edu-school {
-        font-size: 1rem;
-        font-weight: 600;
-        margin: 0;
-    }
-
-    .cv-edu-period {
+    .cv-item-text {
         font-size: 0.875rem;
-        color: #6b7280;
+        color: var(--cv-text-design);
     }
 
-    .cv-edu-text {
-        margin-top: 6px;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 0.875rem;
-        color: #4b5563;
-    }
-
-    /* Skills pills */
-    .cv-skill-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 4px;
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .cv-skill-pill {
-        display: inline-flex;
-        align-items: center;
-        border-radius: 6px;
-        border: 1px solid transparent;
-        padding: 2px 8px;
+    .cv-badge {
         font-size: 0.75rem;
         font-weight: 600;
-        font-family: "JetBrains Mono", monospace;
-        background-color: rgba(37, 99, 235, 0.8); /* bg-primary/80 */
-        color: #f9fafb;
+        padding: 0.125rem 0.4375rem;
+        background-color: var(--cv-badge-bg);
+        color: var(--cv-badge-text);
+        border-radius: 0.25rem;
     }
 
-    /* Footer */
-    .cv-footer {
-        max-width: 768px;
-        margin: 8px auto 0;
-        text-align: center;
+    /* Tags */
+    .cv-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
     }
 
-    .cv-footer-link {
-        font-family: "JetBrains Mono", monospace;
-        font-size: 0.875rem;
-        color: #6b7280;
-        text-decoration: none;
-    }
-
-        .cv-footer-link span {
-            color: #000000;
-            text-decoration: underline;
-            text-underline-offset: 2px;
-        }
-
-    /* Dark theme med MudBlazor */
-    .mud-theme-dark .cv-inner {
-        background-color: #111827;
-        color: #e5e7eb;
-    }
-
-    .mud-theme-dark .cv-work-description,
-    .mud-theme-dark .cv-text,
-    .mud-theme-dark .cv-shortabout {
-        color: #e5e7eb;
-    }
-
-    .mud-theme-dark .cv-contact-btn {
-        background-color: #1f2937;
-        border-color: #4b5563;
-        color: #e5e7eb;
+    .cv-tag {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.125rem 0.5rem;
+        background-color: var(--cv-text-main);
+        color: #ffffff;
+        border-radius: 0.375rem;
     }
 </style>
 
 @code {
     [Parameter] public string username { get; set; } = string.Empty;
+    [Inject] PortfolioStateService PortfolioState { get; set; } = null!;
 
-    private PortfolioDto? Portfolio { get; set; }
-    private bool _loading = true;
+    private PortfolioDto? Portfolio => PortfolioState.CurrentPortfolio;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        _loading = true;
-        Portfolio = await ApiService.GetPortfolioAsync(username);
-        _loading = false;
+        PortfolioState.OnChange += StateHasChanged;
     }
 
-    private string NormalizeWebsite(string? url)
+    public void Dispose()
     {
-        if (string.IsNullOrWhiteSpace(url)) return string.Empty;
-        var trimmed = url.Trim();
-        return trimmed.StartsWith("http", StringComparison.OrdinalIgnoreCase)
-            ? trimmed
-            : $"https://{trimmed}";
-    }
-
-    private string NormalizeGithub(string? url) =>
-        NormalizeSocial(url, "github.com");
-
-    private string NormalizeTwitter(string? url)
-    {
-        if (string.IsNullOrWhiteSpace(url)) return string.Empty;
-        var trimmed = url.Trim();
-        if (trimmed.StartsWith("http", StringComparison.OrdinalIgnoreCase))
-            return trimmed;
-        if (trimmed.StartsWith("twitter.com", StringComparison.OrdinalIgnoreCase) ||
-            trimmed.StartsWith("x.com", StringComparison.OrdinalIgnoreCase))
-            return $"https://{trimmed}";
-        return $"https://x.com/{trimmed}";
-    }
-
-    private string NormalizeLinkedIn(string? url) =>
-        NormalizeSocial(url, "linkedin.com/in");
-
-    private string NormalizeSocial(string? url, string host)
-    {
-        if (string.IsNullOrWhiteSpace(url)) return string.Empty;
-        var trimmed = url.Trim();
-        if (trimmed.StartsWith("http", StringComparison.OrdinalIgnoreCase))
-            return trimmed;
-        return $"https://{host}/{trimmed}";
+        PortfolioState.OnChange -= StateHasChanged;
     }
 }

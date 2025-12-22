@@ -121,7 +121,7 @@
 
     private async Task LoadPortfolioData()
     {
-        if (string.IsNullOrEmpty(Username) || Username == "default") return;
+        if (string.IsNullOrEmpty(Username)) return;
         
         await PortfolioState.LoadPortfolioOnceAsync(Username, ApiService);
         if (PortfolioState.CurrentPortfolio != null)

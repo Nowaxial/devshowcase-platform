@@ -47,6 +47,8 @@ public class ProfileController : ControllerBase
              Bio = user.Bio,
              Location = user.Location,
              ProfileImageUrl = user.ProfileImageUrl,
+             GithubUrl = user.GithubUrl,
+             LinkedInUrl = user.LinkedInUrl,
              SelectedThemeId = user.SelectedThemeId,
              PrefersDarkMode = user.PrefersDarkMode,
              PreferredLanguage = user.PreferredLanguage
@@ -67,6 +69,8 @@ public class ProfileController : ControllerBase
         user.Bio = dto.Bio;
         user.Location = dto.Location;
         user.ProfileImageUrl = dto.ProfileImageUrl;
+        user.GithubUrl = dto.GithubUrl;
+        user.LinkedInUrl = dto.LinkedInUrl;
         user.SelectedThemeId = dto.SelectedThemeId;
         user.PrefersDarkMode = dto.PrefersDarkMode;
         user.PreferredLanguage = dto.PreferredLanguage;

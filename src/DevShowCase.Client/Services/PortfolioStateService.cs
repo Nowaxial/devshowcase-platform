@@ -32,9 +32,9 @@ public class PortfolioStateService
 
     public event Action? OnChange;
 
-    public async Task LoadPortfolioOnceAsync(string username, ApiService apiService)
+    public async Task LoadPortfolioOnceAsync(string username, ApiService apiService, bool forceRefresh = false)
     {
-        if (_currentUsername == username && _currentPortfolio != null) return;
+        if (!forceRefresh && _currentUsername == username && _currentPortfolio != null) return;
 
         IsLoading = true;
         _currentUsername = username;
@@ -50,6 +50,13 @@ public class PortfolioStateService
         {
             IsLoading = false;
         }
+    }
+
+    public void ClearCache()
+    {
+        _currentUsername = null;
+        _currentPortfolio = null;
+        NotifyStateChanged();
     }
 
     private void NotifyStateChanged() => OnChange?.Invoke();

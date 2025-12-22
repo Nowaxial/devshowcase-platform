@@ -11,6 +11,14 @@
             <MudTextField T="string" Label="Position" @bind-Value="Model.Position" Required="true" RequiredError="Position is required!" />
             <MudTextField T="string" Label="Location" @bind-Value="Model.Location" />
             
+            <MudSelect @bind-Value="Model.EmploymentType" Label="Employment Type" Class="mt-2">
+                <MudSelectItem Value="@("Full-time")">Full-time</MudSelectItem>
+                <MudSelectItem Value="@("Part-time")">Part-time</MudSelectItem>
+                <MudSelectItem Value="@("Contract")">Contract</MudSelectItem>
+                <MudSelectItem Value="@("Freelance")">Freelance</MudSelectItem>
+                <MudSelectItem Value="@("Internship")">Internship</MudSelectItem>
+            </MudSelect>
+            
             <MudGrid>
                 <MudItem xs="6">
                     <MudDatePicker Label="Start Date" @bind-Date="StartDate" />
@@ -68,6 +76,7 @@
                 EndDate = Experience.EndDate,
                 IsCurrent = Experience.IsCurrent,
                 Description = Experience.Description,
+                EmploymentType = Experience.EmploymentType,
                 ContentLanguage = Experience.ContentLanguage
             };
         }

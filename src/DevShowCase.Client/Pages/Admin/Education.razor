@@ -5,6 +5,7 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject NavigationManager NavigationManager
+@inject PortfolioStateService PortfolioState
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
     <div class="d-flex justify-space-between align-center mb-6">
@@ -178,6 +179,7 @@
             }
             
             _dialogVisible = false;
+            PortfolioState.ClearCache();
             await LoadEducation();
         }
         catch (Exception)
@@ -196,6 +198,7 @@
         if (result == true)
         {
             await ApiService.DeleteEducationAsync(edu.Id);
+            PortfolioState.ClearCache();
             Snackbar.Add("Education deleted", Severity.Success);
             await LoadEducation();
         }

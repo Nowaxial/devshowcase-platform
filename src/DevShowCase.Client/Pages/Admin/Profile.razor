@@ -4,6 +4,7 @@
 @inject ApiService ApiService
 @inject ISnackbar Snackbar
 @inject NavigationManager NavigationManager
+@inject PortfolioStateService PortfolioState
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-8">
     <MudText Typo="Typo.h4" Class="font-weight-bold mb-2">Profile Settings</MudText>
@@ -30,6 +31,12 @@
                 <MudTextField @bind-Value="_profile.ProfileImageUrl" Label="Profile Image URL" Class="mt-4" HelperText="Direct link to your profile picture" />
 
                 <MudTextField @bind-Value="_profile.Bio" Label="Bio / About Me" Lines="5" Class="mt-4" HelperText="Use markdown or plain text. This is your chance to verify the AI generated bio." />
+                
+                <MudText Typo="Typo.h6" Class="mt-8 mb-4">Social Links</MudText>
+                <div class="d-flex gap-4">
+                    <MudTextField @bind-Value="_profile.GithubUrl" Label="GitHub Profile URL" Adornment="Adornment.Start" AdornmentIcon="@Icons.Custom.Brands.GitHub" />
+                    <MudTextField @bind-Value="_profile.LinkedInUrl" Label="LinkedIn Profile URL" Adornment="Adornment.Start" AdornmentIcon="@Icons.Custom.Brands.LinkedIn" />
+                </div>
 
                 <MudDivider Class="my-6" />
                 
@@ -85,6 +92,7 @@
         try
         {
             await ApiService.UpdateProfileAsync(_profile);
+            PortfolioState.ClearCache();
             Snackbar.Add("Profile updated successfully", Severity.Success);
             
             // Optional: Refresh local state or notify MainLayout if Name/Theme changed

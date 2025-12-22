@@ -4,6 +4,7 @@
 @inject ApiService ApiService
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject PortfolioStateService PortfolioState
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
     <div class="d-flex justify-space-between align-center mb-6">
@@ -148,6 +149,7 @@
             }
 
             _dialogVisible = false;
+            PortfolioState.ClearCache();
             await LoadCompetencies();
         }
         catch (Exception)
@@ -166,6 +168,7 @@
         if (result == true)
         {
             await ApiService.DeleteCompetencyAsync(comp.Id);
+            PortfolioState.ClearCache();
             Snackbar.Add("Competency deleted", Severity.Success);
             await LoadCompetencies();
         }

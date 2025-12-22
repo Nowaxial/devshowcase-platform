@@ -4,6 +4,7 @@
 @inject ApiService ApiService
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject PortfolioStateService PortfolioState
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
     <div class="d-flex justify-space-between align-center mb-6">
@@ -141,6 +142,7 @@
             }
 
             _dialogVisible = false;
+            PortfolioState.ClearCache();
             await LoadSkills();
         }
         catch (Exception)
@@ -159,6 +161,7 @@
         if (result == true)
         {
             await ApiService.DeleteSkillAsync(skill.Id);
+            PortfolioState.ClearCache();
             Snackbar.Add("Skill deleted", Severity.Success);
             await LoadSkills();
         }
