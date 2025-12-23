@@ -44,17 +44,17 @@
         <!-- Navigation -->
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
             <MudLink Href="@($"/{Username}")" Color="Color.Inherit" Class="mx-2">Home</MudLink>
+            <MudLink Href="@($"/{Username}#about")" Color="Color.Inherit" Class="mx-2">About</MudLink>
+            <MudLink Href="@($"/{Username}#projects")" Color="Color.Inherit" Class="mx-2">Projects</MudLink>
+            <MudLink Href="@($"/{Username}#contact")" Color="Color.Inherit" Class="mx-2">Contact</MudLink>
             <MudLink Href="@($"/{Username}/cv")" Color="Color.Inherit" Class="mx-2">CV</MudLink>
-            <MudLink Href="@($"/{Username}/about")" Color="Color.Inherit" Class="mx-2">About</MudLink>
-            <MudLink Href="@($"/{Username}/projects")" Color="Color.Inherit" Class="mx-2">Projects</MudLink>
-            <MudLink Href="@($"/{Username}/contact")" Color="Color.Inherit" Class="mx-2">Contact</MudLink>
         </MudHidden>
         <MudMenu Icon="@LucideIcons.Menu" Color="Color.Inherit" Class="d-flex d-md-none" AnchorOrigin="Origin.BottomRight">
             <MudMenuItem href="@($"/{Username}")">Home</MudMenuItem>
+            <MudMenuItem href="@($"/{Username}#about")">About</MudMenuItem>
+            <MudMenuItem href="@($"/{Username}#projects")">Projects</MudMenuItem>
+            <MudMenuItem href="@($"/{Username}#contact")">Contact</MudMenuItem>
             <MudMenuItem href="@($"/{Username}/cv")">CV</MudMenuItem>
-            <MudMenuItem href="@($"/{Username}/about")">About</MudMenuItem>
-            <MudMenuItem href="@($"/{Username}/projects")">Projects</MudMenuItem>
-            <MudMenuItem href="@($"/{Username}/contact")">Contact</MudMenuItem>
         </MudMenu>
 
         <MudDivider Vertical="true" FlexItem="true" Class="mx-4 my-3 opacity-10" />
@@ -136,7 +136,16 @@
         var segments = relative.Split('/', StringSplitOptions.RemoveEmptyEntries);
         if (segments.Length > 0)
         {
-            Username = segments[0];
+            var potentialUsername = segments[0];
+            // Ignore admin routes and auth routes to prevent 404s
+            if (potentialUsername.Equals("admin", StringComparison.OrdinalIgnoreCase) || 
+                potentialUsername.Equals("login", StringComparison.OrdinalIgnoreCase) ||
+                potentialUsername.Equals("register", StringComparison.OrdinalIgnoreCase) ||
+                potentialUsername.Equals("logout", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+            Username = potentialUsername;
         }
     }
 

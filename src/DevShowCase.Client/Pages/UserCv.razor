@@ -209,6 +209,22 @@ else
         gap: 0.375rem;
     }
 
+    @@media (max-width: 640px) {
+        .cv-header {
+            flex-direction: column-reverse;
+            text-align: center;
+        }
+        .cv-header-text {
+            align-items: center;
+        }
+        .cv-social-links {
+            justify-content: center;
+        }
+        .cv-headline {
+            text-align: center;
+        }
+    }
+
     .cv-name {
         font-size: 1.5rem;
         font-weight: 700;

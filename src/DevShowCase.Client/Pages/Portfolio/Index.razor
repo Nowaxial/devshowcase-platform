@@ -18,125 +18,184 @@
 }
 else
 {
-    <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-8 mb-16">
-        
-        <!-- Header / Profile -->
-        <div class="d-flex flex-column align-center text-center mb-12">
+    <!-- HERO SECTION -->
+    <div id="home" class="hero-section d-flex align-center justify-center flex-column px-4">
+        <MudContainer MaxWidth="MaxWidth.Medium" Class="text-center">
             @if (!string.IsNullOrEmpty(Portfolio.ProfileImageUrl))
             {
-                <MudAvatar image="@Portfolio.ProfileImageUrl" Style="height:120px; width:120px;" Class="mb-4 elevation-4" />
+                <MudAvatar Image="@Portfolio.ProfileImageUrl" Style="height:160px; width:160px;" Class="mb-6 elevation-4" />
             }
             else
             {
-                <MudAvatar Color="Color.Primary" Style="height:120px; width:120px; font-size: 3rem;" Class="mb-4 elevation-4">
+                <MudAvatar Color="Color.Primary" Style="height:160px; width:160px; font-size: 4rem;" Class="mb-6 elevation-4">
                     @(Portfolio.FirstName?.FirstOrDefault())@(Portfolio.LastName?.FirstOrDefault())
                 </MudAvatar>
             }
             
-            <MudText Typo="Typo.h3" Class="font-weight-bold mb-1">@Portfolio.FirstName @Portfolio.LastName</MudText>
-            <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mb-4">@Portfolio.Location</MudText>
+            <MudText Typo="Typo.h2" Class="font-weight-bold mb-2">@Portfolio.FirstName @Portfolio.LastName</MudText>
+            <MudText Typo="Typo.h5" Class="mud-text-secondary mb-6">@Portfolio.Bio</MudText>
             
-            <MudText Typo="Typo.body1" Class="mud-text-secondary" Style="max-width: 600px;">
-                @Portfolio.Bio
-            </MudText>
+            <div class="d-flex justify-center gap-4 flex-wrap">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" Href="@($"/{username}/cv")">View CV</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Large" Href="@($"/{username}#contact")">Contact Me</MudButton>
+            </div>
 
-            <div class="mt-6 d-flex gap-4">
-                @if (!string.IsNullOrEmpty(Portfolio.Email))
+            <div class="mt-8 d-flex justify-center gap-4">
+                 @if (!string.IsNullOrEmpty(Portfolio.GithubUrl))
                 {
-                    <MudIconButton Icon="@Icons.Material.Filled.Email" Href="@($"mailto:{Portfolio.Email}")" Color="Color.Default" />
-                }
-                @if (!string.IsNullOrEmpty(Portfolio.GithubUrl))
-                {
-                    <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Href="@Portfolio.GithubUrl" Target="_blank" Color="Color.Default" />
+                    <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Href="@Portfolio.GithubUrl" Target="_blank" Color="Color.Inherit" Size="Size.Large" />
                 }
                 @if (!string.IsNullOrEmpty(Portfolio.LinkedInUrl))
                 {
-                    <MudIconButton Icon="@Icons.Custom.Brands.LinkedIn" Href="@Portfolio.LinkedInUrl" Target="_blank" Color="Color.Primary" />
+                    <MudIconButton Icon="@Icons.Custom.Brands.LinkedIn" Href="@Portfolio.LinkedInUrl" Target="_blank" Color="Color.Primary" Size="Size.Large" />
                 }
             </div>
-            
-             <div class="mt-6">
-                 <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="@($"/{username}/cv")">View CV</MudButton>
-            </div>
-        </div>
-
-        <MudDivider Class="my-8" />
+        </MudContainer>
         
-        <!-- About Me Section -->
-        @if (!string.IsNullOrEmpty(Portfolio.AboutMe))
-        {
-            <MudText Typo="Typo.h5" Class="font-weight-bold mb-4">About Me</MudText>
-            <MudText Typo="Typo.body1" Class="mud-text-secondary mb-8" Style="white-space: pre-line;">
-                @Portfolio.AboutMe
-            </MudText>
-            <MudDivider Class="my-8" />
-        }
+        <MudIconButton Icon="@Icons.Material.Filled.KeyboardArrowDown" Href="@($"/{username}#about")" Color="Color.Default" Size="Size.Large" Class="mt-16 animate-bounce" />
+    </div>
 
-        <!-- Experience Section -->
-        @if (Portfolio.Experiences.Any())
-        {
-            <MudText Typo="Typo.h5" Class="font-weight-bold mb-6">Experience</MudText>
-            <div class="d-flex flex-column gap-6">
-                @foreach (var exp in Portfolio.Experiences)
-                {
-                    <div class="d-flex gap-4">
-                        <div class="d-flex flex-column align-center">
-                             <MudIcon Icon="@Icons.Material.Filled.Work" Size="Size.Small" Color="Color.Primary" Class="mt-1" />
-                             <div style="width: 2px; flex-grow: 1; background-color: var(--mud-palette-divider);" class="my-2"></div>
-                        </div>
-                        <div class="pb-6">
-                            <MudText Typo="Typo.h6">@exp.Position</MudText>
-                            <MudText Typo="Typo.subtitle1" Color="Color.Secondary">@exp.Company • @exp.Location</MudText>
-                            <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2 d-block">
-                                @exp.StartDate.ToString("MMM yyyy") - @(exp.IsCurrent ? "Present" : exp.EndDate?.ToString("MMM yyyy"))
-                            </MudText>
-                            <MudText Typo="Typo.body2" Class="mt-2" Style="white-space: pre-line;">@exp.Description</MudText>
-                        </div>
-                    </div>
-                }
-            </div>
-            
-            <MudDivider Class="my-8" />
-        }
+    <!-- ABOUT SECTION -->
+    <div id="about" class="section py-16">
+        <MudContainer MaxWidth="MaxWidth.Medium">
+            <MudText Typo="Typo.h3" Class="font-weight-bold mb-8 text-center">About Me</MudText>
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                     <MudText Typo="Typo.body1" Class="text-justify" Style="white-space: pre-line; font-size: 1.1rem; line-height: 1.8;">
+                        @Portfolio.AboutMe
+                    </MudText>
+                </MudItem>
+                 <MudItem xs="12" md="6">
+                     <MudPaper Elevation="0" Class="pa-4 bg-transparent">
+                          <MudText Typo="Typo.h6" Class="mb-4">Key Competencies</MudText>
+                          <div class="d-flex flex-wrap gap-2">
+                                @foreach (var skill in Portfolio.Skills.Take(10))
+                                {
+                                    <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined">@skill.Name</MudChip>
+                                }
+                          </div>
 
-        <!-- Projects Check (Just a teaser, mainly explicitly in /projects) -->
-        @if (Portfolio.Projects.Any())
-        {
-             <div class="d-flex justify-space-between align-center mb-6">
-                <MudText Typo="Typo.h5" Class="font-weight-bold">Recent Projects</MudText>
-            </div>
+                          <MudText Typo="Typo.h6" Class="mt-8 mb-4">Tech Stack</MudText>
+                          <div class="d-flex flex-wrap gap-2">
+                                @foreach (var tech in Portfolio.TechStacks.Take(8))
+                                {
+                                     <MudTooltip Text="@tech.Name">
+                                         @if (!string.IsNullOrEmpty(tech.IconUrl))
+                                         {
+                                              <img src="@tech.IconUrl" height="40" width="40" class="mr-2" alt="@tech.Name"/>
+                                         }
+                                         else
+                                         {
+                                             <MudChip T="string" Size="Size.Small">@tech.Name</MudChip>
+                                         }
+                                     </MudTooltip>
+                                }
+                          </div>
+                     </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </div>
+    
+    <MudDivider />
+
+    <!-- PROJECTS SECTION -->
+    <div id="projects" class="section py-16 bg-muted">
+        <MudContainer MaxWidth="MaxWidth.Large">
+            <MudText Typo="Typo.h3" Class="font-weight-bold mb-12 text-center">Featured Projects</MudText>
             
             <MudGrid>
-                @foreach (var project in Portfolio.Projects.Take(2))
+                @foreach (var project in Portfolio.Projects)
                 {
-                     <MudItem xs="12" md="6">
-                        <MudCard Elevation="2" Class="h-100">
+                    <MudItem xs="12" md="6" lg="4">
+                        <MudCard Elevation="4" Class="h-100 d-flex flex-column hover-zoom">
                              @if (!string.IsNullOrEmpty(project.ImageUrl))
                             {
-                                <MudCardMedia Image="@project.ImageUrl" Height="160" />
+                                <MudCardMedia Image="@project.ImageUrl" Height="200" />
                             }
-                            <MudCardContent>
-                                <MudText Typo="Typo.h6">@project.Title</MudText>
-                                <MudText Typo="Typo.body2" Class="mud-text-secondary mt-2 line-clamp-3">@project.Description</MudText>
+                            <MudCardContent Class="flex-grow-1">
+                                <MudText Typo="Typo.h5" Class="font-weight-bold mb-2">@project.Title</MudText>
+                                <MudText Typo="Typo.body2" Class="mud-text-secondary line-clamp-3">@project.Description</MudText>
+                                <div class="mt-4 d-flex gap-1 flex-wrap">
+                                    @foreach(var tech in project.Technologies.Split(',', StringSplitOptions.RemoveEmptyEntries).Take(4))
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Info">@tech.Trim()</MudChip>
+                                    }
+                                </div>
                             </MudCardContent>
-                            <MudCardActions>
+                            <MudCardActions Class="mt-auto">
                                 @if (!string.IsNullOrEmpty(project.GithubUrl))
                                 {
-                                    <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Href="@project.GithubUrl" Target="_blank" Size="Size.Small" />
+                                    <MudButton StartIcon="@Icons.Custom.Brands.GitHub" Href="@project.GithubUrl" Target="_blank" FullWidth="true" Variant="Variant.Text">Code</MudButton>
                                 }
                                 @if (!string.IsNullOrEmpty(project.ProjectUrl))
                                 {
-                                    <MudIconButton Icon="@Icons.Material.Filled.Link" Href="@project.ProjectUrl" Target="_blank" Size="Size.Small" Color="Color.Primary" />
+                                    <MudButton StartIcon="@Icons.Material.Filled.Launch" Href="@project.ProjectUrl" Target="_blank" FullWidth="true" Variant="Variant.Filled" Color="Color.Primary">Live Demo</MudButton>
                                 }
                             </MudCardActions>
                         </MudCard>
-                     </MudItem>
+                    </MudItem>
                 }
             </MudGrid>
-        }
+        </MudContainer>
+    </div>
 
-    </MudContainer>
+    <!-- CONTACT SECTION -->
+    <div id="contact" class="section py-16">
+        <MudContainer MaxWidth="MaxWidth.Small" Class="text-center">
+            <MudText Typo="Typo.h3" Class="font-weight-bold mb-4">Get In Touch</MudText>
+            <MudText Typo="Typo.h6" Class="mud-text-secondary mb-8">
+                I'm currently open for new opportunities. Whether you have a question or just want to say hi, I'll try my best to get back to you!
+            </MudText>
+            
+            <div class="d-flex justify-center gap-4 mb-8">
+                 @if (!string.IsNullOrEmpty(Portfolio.Email))
+                {
+                    <MudButton StartIcon="@Icons.Material.Filled.Email" Href="@($"mailto:{Portfolio.Email}")" Variant="Variant.Outlined" Size="Size.Large">Email Me</MudButton>
+                }
+            </div>
+
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                &copy; @DateTime.Now.Year @Portfolio.FirstName @Portfolio.LastName. Designed with DevShowcase.
+            </MudText>
+        </MudContainer>
+    </div>
 }
+
+<style>
+    .hero-section {
+        min-height: 90vh;
+        /* background: linear-gradient(180deg, rgba(var(--mud-palette-background-rgb), 0) 0%, rgba(var(--mud-palette-primary-rgb), 0.05) 100%); */
+    }
+    
+    .section {
+        min-height: 60vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .bg-muted {
+        background-color: var(--mud-palette-background-grey);
+    }
+
+    .hover-zoom {
+        transition: transform 0.3s ease;
+    }
+    .hover-zoom:hover {
+        transform: translateY(-5px);
+    }
+    
+    .animate-bounce {
+        animation: bounce 2s infinite;
+    }
+    
+    @@keyframes bounce {
+        0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+        40% {transform: translateY(-10px);}
+        60% {transform: translateY(-5px);}
+    }
+</style>
 
 @code {
     [Parameter] public string username { get; set; } = "default";
