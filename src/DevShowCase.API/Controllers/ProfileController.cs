@@ -25,7 +25,7 @@ public class ProfileController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PortfolioDto>> GetMyProfile()
+    public async Task<ActionResult<UpdateProfileDto>> GetMyProfile()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userId == null) return Unauthorized();

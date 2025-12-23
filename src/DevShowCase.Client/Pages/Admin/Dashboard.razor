@@ -4,8 +4,10 @@
 @using DevShowCase.Client.Shared
 @using DevShowcase.Client.Services
 @using DevShowcase.Shared.DTOs.Admin
+@using Microsoft.AspNetCore.Components.Authorization
 @attribute [Authorize]
 @inject ApiService ApiService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Admin Dashboard</PageTitle>
 
@@ -15,7 +17,7 @@
             <MudText Typo="Typo.h3" Class="font-weight-bold">Dashboard</MudText>
             <MudText Typo="Typo.subtitle1" Class="mud-text-secondary">Welcome back! Here's an overview of your portfolio.</MudText>
         </div>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@LucideIcons.Sun" IconClass="lucide-icon" Href="/" Target="_blank">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@LucideIcons.Sun" IconClass="lucide-icon" Href="@GetPublicProfileUrl()" Target="_blank">
             View Live Site
         </MudButton>
     </div>
@@ -94,14 +96,20 @@
 </MudContainer>
 
 <style>
-    .hover-card:hover { border-color: var(--mud-palette-primary) !important; cursor: pointer; }
-    .border-l-4 { border-left-width: 4px !important; }
+    .hover-card:hover {
+        border-color: var(--mud-palette-primary) !important;
+        cursor: pointer;
+    }
+
+    .border-l-4 {
+        border-left-width: 4px !important;
+    }
 </style>
 
 @code {
     private DashboardStatsDto _stats = new();
     private bool _loading = true;
-
+    private string _currentUsername = "default";
     private List<QuickAction> _quickActions = new();
 
     protected override async Task OnInitializedAsync()
@@ -109,6 +117,13 @@
         _loading = true;
         try
         {
+            // Hämta användarens username från JWT token
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            if (authState.User.Identity?.IsAuthenticated == true)
+            {
+                _currentUsername = authState.User.Identity.Name ?? "default";
+            }
+
             _stats = await ApiService.GetDashboardStatsAsync();
             InitializeActions();
         }
@@ -117,6 +132,11 @@
             // Error handling could be added here
         }
         _loading = false;
+    }
+
+    private string GetPublicProfileUrl()
+    {
+        return $"/{_currentUsername}";
     }
 
     private void InitializeActions()
@@ -137,4 +157,3 @@
 
     private record QuickAction(string Title, string Description, string Link, string Icon, Color Color);
 }
-

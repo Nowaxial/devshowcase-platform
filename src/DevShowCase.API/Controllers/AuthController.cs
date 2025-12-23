@@ -22,10 +22,22 @@ public class AuthController(
         if (existingUser != null)
             return BadRequest(new AuthResponseDto { Success = false, Errors = new List<string> { "User with this email already exists" } });
 
-        // 2. Skapa användarobjektet
+        // 2. Generera unikt användarnamn
+        var baseUsername = $"{registerDto.FirstName.ToLower()}{registerDto.LastName.ToLower()}";
+        var username = baseUsername;
+        var counter = 1;
+
+        // Kolla om användarnamnet redan finns
+        while (await userManager.FindByNameAsync(username) != null)
+        {
+            username = $"{baseUsername}{counter}";
+            counter++;
+        }
+
+        // 3. Skapa användarobjektet
         var user = new User
         {
-            UserName = registerDto.Email,
+            UserName = username,
             Email = registerDto.Email,
             FirstName = registerDto.FirstName,
             LastName = registerDto.LastName,
@@ -33,28 +45,30 @@ public class AuthController(
             SelectedThemeId = 1
         };
 
-        // 3. Spara till databas
+        // 4. Spara till databas
         var result = await userManager.CreateAsync(user, registerDto.Password);
         if (!result.Succeeded)
         {
             return BadRequest(new AuthResponseDto { Success = false, Errors = result.Errors.Select(e => e.Description).ToList() });
         }
 
-        // 4. Lägg till roll
+        // 5. Lägg till roll
         if (!await roleManager.RoleExistsAsync("User"))
         {
             await roleManager.CreateAsync(new IdentityRole("User"));
         }
         await userManager.AddToRoleAsync(user, "User");
 
-        return Ok(new AuthResponseDto { Success = true, Token = "", RefreshToken = "" }); // Returnera tomma tokens vid registrering, eller logga in direkt
+        return Ok(new AuthResponseDto { Success = true, Token = "", RefreshToken = "" });
     }
+
 
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginDto loginDto)
     {
         // 1. Hitta användaren
         var user = await userManager.FindByEmailAsync(loginDto.Email);
+        
         if (user == null)
             return Unauthorized(new AuthResponseDto { Success = false, Errors = new List<string> { "Invalid email or password" } });
 

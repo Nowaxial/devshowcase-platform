@@ -89,11 +89,29 @@ public static class DbInitializer
 
             // Seed John Doe User
             var email = "john.doe@example.com";
-            var user = await userManager.FindByEmailAsync(email);
+            var user = await userManager.FindByNameAsync("johndoe");
+            if (user == null)
+            {
+                user = await userManager.FindByEmailAsync(email);
+            }
+
             if (user != null && user.UserName != "johndoe")
             {
                 user.UserName = "johndoe";
                 user.NormalizedUserName = "JOHNDOE";
+                await userManager.UpdateAsync(user);
+            }
+            
+            if (user != null && user.Email != email)
+            {
+                user.Email = email;
+                user.NormalizedEmail = email.ToUpper();
+                await userManager.UpdateAsync(user);
+            }
+
+            if (user != null && string.IsNullOrEmpty(user.AboutMe))
+            {
+                user.AboutMe = "I am a passionate Fullstack Developer based in Gothenburg, with a strong focus on building secure, scalable, and user-friendly web applications using the .NET ecosystem. I enjoy solving complex problems and am always eager to learn new technologies.\n\nOutside of coding, I am an AI enthusiast and have a background in digital healthcare development. I believe in the power of clean code and meaningful user experiences.";
                 await userManager.UpdateAsync(user);
             }
             
